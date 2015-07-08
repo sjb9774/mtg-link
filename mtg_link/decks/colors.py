@@ -27,6 +27,8 @@ class Color:
                 if validated_color and validated_color not in self.colors:
                     self.colors.append(validated_color)
 
+    def get_colors(self):
+        return tuple(self.colors)
 
     def is_(self, color):
         return self._get_valid_color(color) in self.colors

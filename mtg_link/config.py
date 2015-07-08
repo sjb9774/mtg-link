@@ -12,7 +12,7 @@ class Config(object):
         if hasattr(self._parser, attr_name):
             return getattr(self._parser, attr_name)
         else:
-            return ConfigSection(attr_name, self._parser, self._path, self.auto_write)
+            return ConfigSection(attr_name, self._parser, self._path, self._auto_write)
 
     def all(self):
         d = {}
@@ -55,4 +55,4 @@ class ConfigSection(object):
             if get_attr('__auto_write'):
                 p.write(open(get_attr('__path'), 'r+'))
 
-config = Config('./conf.cfg')
+config = Config('./conf.cfg', True)

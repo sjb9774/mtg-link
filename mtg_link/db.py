@@ -1,5 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import create_engine, Column, VARCHAR
 from mtg_link.config import config
 
 def new_engine(uri=None):
@@ -22,20 +23,20 @@ def initialize():
     my_session_maker = scoped_session(sessionmaker(bind=engine))
     Session = my_session_maker()
     Base.metadata.bind = engine
+
     Base.metadata.create_all()
 
-class IdMixin():
+id_length = 40
+from uuid import uuid4
+class IdMixin(object):
 
     def __init__(self, **kwargs):
-        for attr, val in kwargs.iteritems():
-            if hasattr(self, attr):
-                setattr(self, attr, val)
-        from uuid import uuid4
-        self.id = str(uuid4())
+        if not hasattr(self, 'id') or not self.id:
+            self.id = str(uuid4())
 
     @declared_attr
     def id(cls):
-        return Column(VARCHAR(40), name='id', primary_key=True)
+        return Column(VARCHAR(id_length), name='id', primary_key=True, default=(lambda: str(uuid4())))
 
 
 class DefaultMixin():
