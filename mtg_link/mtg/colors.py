@@ -1,17 +1,42 @@
-class BasicColor:
+class Color:
 
     def __init__(self, color):
-        if color.lower() in Color._colors_abbr_to_full:
-            self.color = Color._colors_abbr_to_full[color.lower()]
+        if color.lower() in ColorIdentity._colors_abbr_to_full:
+            self.color = ColorIdentity._colors_abbr_to_full[color.lower()]
             self.abbreviation = color.lower()
-        elif color.lower() in Color._colors_full_to_abbr:
+        elif color.lower() in ColorIdentity._colors_full_to_abbr:
             self.color = color.lower()
-            self.abbreviation = Color._colors_full_to_abbr[self.color]
+            self.abbreviation = ColorIdentity._colors_full_to_abbr[self.color]
         else:
-            raise ArgumentError('{color} is not a valid color.'.format(**locals()))
+            raise ValueError('"{color}" is not a valid color.'.format(**locals()))
 
-            
-class Color:
+    def __eq__(self, other):
+        return self.color == other.color
+
+    def __ne__(self, other):
+        return self.color != other.color
+
+    def __gt__(self, other):
+        return self.abbreviation > other.abbreviation
+
+    def __lt__(self, other):
+        return self.abbreviation < other.abbreviation
+
+    def __ge__(self, other):
+        return self > other or self == other
+
+    def __le__(self, other):
+        return self < other or self == other
+
+    def __hash__(self):
+        return hash(self.color)
+
+    def __repr__(self):
+        return "<{color_name} Color instance at {address}>".format(color_name=self.color.capitalize(),
+                                                                   address=hex(id(self)))
+
+
+class ColorIdentity:
 
     _green = ('green', 'g')
     _blue = ('blue', 'u')
@@ -62,7 +87,7 @@ class Color:
             self.colors.add(validated_color)
 
     def get_colors(self):
-
+        return sorted(self.colors)
 
     def is_(self, color):
         return self._get_valid_color(color) in self.colors
@@ -98,10 +123,7 @@ class Color:
         return self.colors == other.colors
 
     def _get_valid_color(self, color):
-        if color in self._colors_full_to_abbr:
-            return self._colors_full_to_abbr[color]
-        else:
-            if
+        return Color(color)
 
     def __eq__(self, other):
         return self.matches(other)
@@ -113,5 +135,5 @@ class Color:
         return ', '.join([color.capitalize() for color in self.colors])
 
     def __repr__(self):
-        return '<Color instance ("{colors}") at {address}>'.format(colors='/'.join([getattr(self, '_' + color)[1] for color in self.colors]),
+        return '<Color instance ("{colors}") at {address}>'.format(colors='/'.join([color.abbreviation for color in self.colors]),
                                                                    address=hex(id(self)))
