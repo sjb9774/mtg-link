@@ -43,9 +43,12 @@ from mtg_link.mtg.colors import Color
 
 class ManaSymbol:
 
-    def __init__(self, colors=None, x=False, phyrexian=False, count=1):
+    def __init__(self, colors=None, x=False, phyrexian=False, count=1, label=None):
+        # label is a special parameter that only matters for X-cost symbols, it can be
+        # 'x', 'y', or 'z' (see Ultimate Nightmare of Wizards Of The Coast Customer Service)
         self.colors = []
         self._color_abbrs = []
+        self.label = label
         if colors:
             self.colorless = False
             for color in colors:
@@ -68,7 +71,9 @@ class ManaSymbol:
         self.phyrexian = phyrexian
 
     def symbol(self):
-        return '{' + '/'.join(sorted(self._color_abbrs)) + '}'
+        if self.x:
+            return '{' + self.label + '}'
+        return '{' + '/'.join(sorted([color.abbreviation for color in self.colors]) + (['p'] if self.phyrexian else [])) + '}'
 
     def converted_mana_cost(self):
         if self.x:
@@ -81,6 +86,9 @@ class ManaSymbol:
 
     def is_hybrid(self):
         return len(self.get_colors()) > 1
+
+    def __hash__(self):
+        return hash(self())
 
     def __call__(self):
         return self.symbol()

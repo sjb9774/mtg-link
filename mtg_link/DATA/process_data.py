@@ -1,14 +1,18 @@
 from mtg_link.mtg.magic import MtgCardSet, MtgCard, ManaSymbol
 from mtg_link.mtg.colors import Color
-from mtg_link.mtg import TYPES, ALL_COLOR_COMBINATIONS
+from mtg_link.mtg import TYPES, ALL_COLOR_COMBINATIONS, COLORS
 from mtg_link.models.magic import MtgCardSetModel, MtgCardModel, ManaCostModel, ManaSymbolModel
 from mtg_link.DATA import get_card_data
 from mtg_link import db
+import time
 import re
 
 def do_data_process():
+    stime = time.time()
+    print "Beginning card process..."
     CARD_DATA = get_card_data()
     mtg = {}
+    mana_costs = []
     mana_symbols = ManaSymbolModel.all()
     if not mana_symbols:
         prep_mana_symbols()
@@ -28,29 +32,51 @@ def do_data_process():
         'names': 'transform'
     }
     transform_map = {}
-    mana_cost_regx_str = r'\s*\{([\w\d/])\}\s*'
+    mana_cost_regx_str = r'\s*\{([\w\d/]+)\}\s*'
     mana_cost_regx = re.compile(mana_cost_regx_str)
+    set_time = time.time()
     for set_code, set_data in CARD_DATA:
+        print 'Processing set {set_code}...'.format(set_code=set_code)
         mtg[set_code] = {'set': None, 'cards': []}
         mtg[set_code]['set'] = make_instance(MtgCardSetModel, card_set_prop_map, **set_data)
         for card_dict in set_data['cards']:
+            cost = {}
             if 'manaCost' not in card_dict:
                 # defaults all costs to zero
-                cost = ManaCostModel()
+                if card_dict.get('manaCost'):
+                    print 'What the fuck'
+                mana_cost = ManaCostModel()
+                symbol = mana_symbol_dict.setdefault('colorless', ManaSymbolModel.filter_by(x=False, phyrexian=False, **{k:False for k in COLORS}).first())
+                mana_cost.count = 0
+                mana_symbol_id = symbol.id
             else:
-                mana_cost = card_dict.pop('manaCost')
-                mana_symbols = []
-                for token in mana_cost_regx.findall(mana_cost):
-                    if token.isdigit():
-                        symbol = ManaSymbol(count=int(token))
-                    elif token.lower() in ('x', 'y', 'z'): # Ultimate Nightmare of Wizard's of the Coast Customer Service :\
-                        symbol = ManaSymbol(x=True)
-                    else:
-                        colors = token.split('/')
-                        symbol = ManaSymbol(colors=colors)
-                    mana_symbols.append(symbol)
-                    cost = ManaCostModel.from_mana_symbols(*mana_symbols)
-                    card_dict['mana_cost_id'] = cost.id
+                raw_mana_cost = card_dict.pop('manaCost')
+                # token = {4} or {g/w} or {r} etc...
+
+                for mana_piece in mana_cost_regx.findall(raw_mana_cost):
+                    token_parts = mana_piece.split('/')
+                    for token in token_parts:
+                        if token.isdigit():
+                            symbol = mana_symbol_dict.setdefault('colorless', ManaSymbolModel.filter_by(x=False, phyrexian=False, **{k:False for k in COLORS}).first())
+                            current = cost.setdefault(symbol, 0)
+                            cost[symbol] = current + int(token)
+                        elif token.lower() in ('x', 'y', 'z'): # Ultimate Nightmare of Wizard's of the Coast Customer Service :\
+                            symbol = mana_symbol_dict.setdefault(ManaSymbol(x=True, label=token.lower()).symbol(),
+                                                                 ManaSymbolModel.filter_by(x=True, label=token.lower()).first())
+                            current = cost.setdefault(symbol, 0)
+                            cost[symbol] += 1
+                        else:
+                            if len(token) > 1:
+                                import pudb; pudb.set_trace()
+                            colors = token.split('/')
+                            is_phy = ('P' in colors) or ('p' in colors)
+                            colors = [c.lower() for c in colors if c.lower() != 'p']
+                            if is_phy:
+                                print '{name} ({mid}) is phyrexian!'.format(name=card_dict['name'], mid=card_dict.get('multiverse_id'))
+                            symbol = mana_symbol_dict.setdefault(ManaSymbol(colors=colors, phyrexian=is_phy).symbol(),
+                                                                 ManaSymbolModel.filter_by(phyrexian=is_phy, **{c.lower(): (True if c in colors else False) for c in COLORS}).first())
+                            current = cost.setdefault(symbol, 0)
+                            cost[symbol] += 1
 
             if not card_dict.get('colors'):
                 colors = None
@@ -76,10 +102,16 @@ def do_data_process():
 
             card = make_instance(MtgCardModel,
                                  card_prop_map,
-                                 mana_cost=cost,
                                  colors=colors,
                                  set_id=mtg[set_code]['set'].id,
                                  **card_dict)
+
+            for symbol, count in cost.iteritems():
+                mana_cost = ManaCostModel()
+                mana_cost.count = count
+                mana_cost.mana_symbol_id = symbol.id
+                mana_cost.card_id = card.id
+                mana_costs.append(mana_cost)
 
             # it's a transform card
             if card_dict.get('layout') == 'double-faced':
@@ -94,8 +126,10 @@ def do_data_process():
                     transform_name = [name for name in card_dict['names'] if name != card_dict['name']][0]
                     transform_map[transform_name] = card
             mtg[set_code]['cards'].append(card)
-
-    return mtg
+        print 'Set completed, took {duration} seconds.'.format(duration=time.time()-set_time)
+        set_time = time.time()
+    print 'Processing done, total time {total_time} seconds.'.format(total_time=time.time()-stime)
+    return mtg, mana_costs
 
 def make_instance(cls, property_map, **kwargs):
     new_dict = {}
@@ -123,15 +157,32 @@ def mysql_dump(data):
         "BNG": ...
     }
     """
-    for set_code, info_dict in data.iteritems():
+    commit_interval = 100
+    cards, costs = data
+    num_sets = len(cards.keys())
+    j = 0
+    for set_code, info_dict in cards.iteritems():
+        print "Set #{current} of {total}...".format(current=j, total=num_sets)
         set = info_dict['set'].insert()
-        for card in info_dict['cards']:
-            card.mana_cost.insert()
-            card.set = set.id
-            card.insert()
-    # db.Session.commit()
+        num_cards = len(info_dict['cards'])
+        j += 1
+        for i, card in enumerate(info_dict['cards']):
+            card.set_id = set.id
+            card.insert(commit=False)
+            if i != 0 and i % commit_interval == 0:
+                print "\tCard {current} committed of {total}".format(current=i, total=num_cards)
+                db.Session.commit()
+
+    total_costs = len(costs)
+    for i, cost in enumerate(costs):
+        cost.insert(commit=False)
+        if i != 0 and i % commit_interval == 0:
+            print "{costs}/{total} mana costs committed.".format(costs=i, total=total_costs)
+            db.Session.commit()
 
 def prep_mana_symbols():
+    if ManaSymbolModel.all():
+        return
     for cc in [comb for comb in ALL_COLOR_COMBINATIONS if len(comb) <= 2]:
         for b in (True, False):
             ms = ManaSymbolModel()
@@ -151,7 +202,21 @@ def prep_mana_symbols():
         x_cost.insert(commit=False)
     db.Session.commit()
 
+def gen_print(g, start_msg='Starting...', done_msg='Done!'):
+    print start_msg
+    problem_size = g.next()
+    problem_progress = g.next()
+    while problem_progress < problem_size:
+        print '\r{prog}/{total}'.format(prog=problem_progress, total=problem_size),
+        problem_progress = g.next()
+    print done_msg
+
 if __name__ == "__main__":
-    mtg_data = do_data_process()
-    prep_mana_symbols()
-    mysql_dump(mtg_data)
+    try:
+        prep_mana_symbols()
+        mtg_data = do_data_process()
+        mysql_dump(mtg_data)
+    except KeyboardInterrupt:
+        print 'Rolling back before exit!'
+        db.Session.rollback()
+        raise

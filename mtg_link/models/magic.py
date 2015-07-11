@@ -1,6 +1,7 @@
 from sqlalchemy import Column, VARCHAR, Integer, Boolean, ForeignKey, Enum, Date
 from mtg_link import db
 from mtg_link.mtg.magic import MtgCard, MtgCardSet, ManaSymbol
+from mtg_link.mtg.colors import Color
 from mtg_link.mtg import ALL_COLOR_COMBINATIONS, TYPES, SET_TYPES
 
 class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
@@ -141,6 +142,8 @@ class ManaCostModel(db.Base, db.DefaultMixin, db.IdMixin):
         mana_cost.converted_mana_cost = cmc
         return mana_cost
 '''
+
+from sqlalchemy import event
 class ManaSymbolModel(db.IdMixin, db.Base, db.DefaultMixin, ManaSymbol):
 
     __tablename__ = 'mana_symbols'
@@ -160,6 +163,33 @@ class ManaSymbolModel(db.IdMixin, db.Base, db.DefaultMixin, ManaSymbol):
     def __init__(self, *args, **kwargs):
         db.IdMixin.__init__(self)
         ManaSymbol.__init__(self, **kwargs)
+
+
+# a couple of functions to bridge the gap between the database representation and the basic representation
+@event.listens_for(ManaSymbolModel, 'load')
+def set_colors(target, context):
+    colors = ('b', 'g', 'r', 'u', 'w')
+    mana_symbol = target
+    mana_symbol.colors = []
+    for color in colors:
+        if getattr(mana_symbol, color):
+            mana_symbol.colors.append(Color(color))
+
+@event.listens_for(ManaSymbolModel.r, 'set')
+@event.listens_for(ManaSymbolModel.u, 'set')
+@event.listens_for(ManaSymbolModel.b, 'set')
+@event.listens_for(ManaSymbolModel.w, 'set')
+@event.listens_for(ManaSymbolModel.g, 'set')
+def refresh_colors(target, value, old_value, initiator):
+    if value not in (True, False, None):
+        raise ValueError('Colors can only be set to True, False, or None for a ManaSymbolModel')
+    else:
+        colors = ('b', 'g', 'r', 'u', 'w')
+        mana_symbol = target
+
+        mana_symbol.colors = [Color(abbr) for abbr in colors if getattr(mana_symbol, abbr) and abbr != initiator.key]
+        if value:
+            mana_symbol.colors.append(Color(initiator.key))
 
 class ManaCostModel(db.IdMixin, db.Base, db.DefaultMixin):
 

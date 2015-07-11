@@ -72,7 +72,7 @@ class DefaultMixin():
 
     @classmethod
     def all(self):
-        return Session.query(self).filter(self.id != None)
+        return Session.query(self).filter(self.id != None).all()
 
     @classmethod
     def filter(self, *args, **kwargs):
