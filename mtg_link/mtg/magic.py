@@ -43,7 +43,7 @@ from mtg_link.mtg.colors import Color
 
 class ManaSymbol:
 
-    def __init__(self, colors=None, x=False, phyrexian=False, count=1, label=None):
+    def __init__(self, colors=None, x=False, phyrexian=False, value=None, label=None):
         # label is a special parameter that only matters for X-cost symbols, it can be
         # 'x', 'y', or 'z' (see Ultimate Nightmare of Wizards Of The Coast Customer Service)
         self.colors = []
@@ -66,20 +66,33 @@ class ManaSymbol:
         if colors and x:
             raise ValueError('X-cost mana-symbols aren\'t colored.')
 
-        self.count = count
+        if value is not None:
+            self.value = value
+        elif x:
+            self.value = 0
+        else:
+            self.value = 1
         self.x = x
         self.phyrexian = phyrexian
 
     def symbol(self):
+
         if self.x:
             return '{' + self.label + '}'
-        return '{' + '/'.join(sorted([color.abbreviation for color in self.colors]) + (['p'] if self.phyrexian else [])) + '}'
+        color_array = '/'.join(sorted([color.abbreviation for color in self.colors]) + (['p'] if self.phyrexian else []))
+        if self.colorless:
+            if color_array:
+                slash = '/'
+            else:
+                slash = ''
+            return '{'+ str(self.value) + slash + color_array + '}'
+        return '{' + color_array + '}'
 
     def converted_mana_cost(self):
         if self.x:
             return 0
         else:
-            return self.count
+            return self.value
 
     def get_colors(self):
         return sorted(self.colors)

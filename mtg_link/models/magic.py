@@ -153,6 +153,7 @@ class ManaSymbolModel(db.IdMixin, db.Base, db.DefaultMixin, ManaSymbol):
     b = Column(Boolean, default=False)
     g = Column(Boolean, default=False)
     w = Column(Boolean, default=False)
+    colorless = Column(Boolean, default=False)
     x = Column(Boolean, default=False)
     value = Column(Integer, default=1)
 
@@ -168,7 +169,7 @@ class ManaSymbolModel(db.IdMixin, db.Base, db.DefaultMixin, ManaSymbol):
 # a couple of functions to bridge the gap between the database representation and the basic representation
 @event.listens_for(ManaSymbolModel, 'load')
 def set_colors(target, context):
-    colors = ('b', 'g', 'r', 'u', 'w')
+    colors = ('b', 'g', 'r', 'u', 'w', 'colorless')
     mana_symbol = target
     mana_symbol.colors = []
     for color in colors:
@@ -184,7 +185,7 @@ def refresh_colors(target, value, old_value, initiator):
     if value not in (True, False, None):
         raise ValueError('Colors can only be set to True, False, or None for a ManaSymbolModel')
     else:
-        colors = ('b', 'g', 'r', 'u', 'w')
+        colors = ('b', 'g', 'r', 'u', 'w', 'colorless')
         mana_symbol = target
 
         mana_symbol.colors = [Color(abbr) for abbr in colors if getattr(mana_symbol, abbr) and abbr != initiator.key]

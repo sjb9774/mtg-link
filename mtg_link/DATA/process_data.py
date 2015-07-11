@@ -53,30 +53,34 @@ def do_data_process():
                 raw_mana_cost = card_dict.pop('manaCost')
                 # token = {4} or {g/w} or {r} etc...
 
-                for mana_piece in mana_cost_regx.findall(raw_mana_cost):
-                    token_parts = mana_piece.split('/')
-                    for token in token_parts:
-                        if token.isdigit():
-                            symbol = mana_symbol_dict.setdefault('colorless', ManaSymbolModel.filter_by(x=False, phyrexian=False, **{k:False for k in COLORS}).first())
-                            current = cost.setdefault(symbol, 0)
-                            cost[symbol] = current + int(token)
-                        elif token.lower() in ('x', 'y', 'z'): # Ultimate Nightmare of Wizard's of the Coast Customer Service :\
-                            symbol = mana_symbol_dict.setdefault(ManaSymbol(x=True, label=token.lower()).symbol(),
-                                                                 ManaSymbolModel.filter_by(x=True, label=token.lower()).first())
-                            current = cost.setdefault(symbol, 0)
-                            cost[symbol] += 1
+                for token in mana_cost_regx.findall(raw_mana_cost):
+                    if token.isdigit():
+                        symbol = mana_symbol_dict.setdefault('colorless', ManaSymbolModel.filter_by(x=False, phyrexian=False, **{k:False for k in COLORS}).first())
+                        current = cost.setdefault(symbol, 0)
+                        cost[symbol] = current + int(token)
+                    elif token.lower() in ('x', 'y', 'z'): # Ultimate Nightmare of Wizard's of the Coast Customer Service :\
+                        symbol = mana_symbol_dict.setdefault(ManaSymbol(x=True, label=token.lower()).symbol(),
+                                                             ManaSymbolModel.filter_by(x=True, label=token.lower()).first())
+                        current = cost.setdefault(symbol, 0)
+                        cost[symbol] += 1
+                    else:
+                        if len(token) > 1:
+                            import pudb; pudb.set_trace()
+                        parts = token.split('/')
+                        is_phy = ('P' in parts) or ('p' in parts)
+                        colors = [c.lower() for c in parts if c.lower() != 'p' and not c.isdigit()]
+                        colorless_pieces = [int(num) for num in parts if num.isdigit()]
+                        if colorless_pieces:
+                            value = colorless_pieces[0]
+                            colors.append('colorless')
                         else:
-                            if len(token) > 1:
-                                import pudb; pudb.set_trace()
-                            colors = token.split('/')
-                            is_phy = ('P' in colors) or ('p' in colors)
-                            colors = [c.lower() for c in colors if c.lower() != 'p']
-                            if is_phy:
-                                print '{name} ({mid}) is phyrexian!'.format(name=card_dict['name'], mid=card_dict.get('multiverse_id'))
-                            symbol = mana_symbol_dict.setdefault(ManaSymbol(colors=colors, phyrexian=is_phy).symbol(),
-                                                                 ManaSymbolModel.filter_by(phyrexian=is_phy, **{c.lower(): (True if c in colors else False) for c in COLORS}).first())
-                            current = cost.setdefault(symbol, 0)
-                            cost[symbol] += 1
+                            value = None
+                        if is_phy:
+                            print '{name} ({mid}) is phyrexian!'.format(name=card_dict['name'], mid=card_dict.get('multiverse_id'))
+                        symbol = mana_symbol_dict.setdefault(ManaSymbol(colors=colors, phyrexian=is_phy, value=value).symbol(),
+                                                             ManaSymbolModel.filter_by(phyrexian=is_phy, **{c.lower(): (True if c in colors else False) for c in COLORS}).first())
+                        current = cost.setdefault(symbol, 0)
+                        cost[symbol] += 1
 
             if not card_dict.get('colors'):
                 colors = None

@@ -81,3 +81,15 @@ class DefaultMixin():
     @classmethod
     def filter_by(self, **kwargs):
         return Session.query(self).filter_by(**kwargs)
+
+    @classmethod
+    def get_or_make(self, **filter_by_kwargs):
+        existing = Session.query(self).filter_by(**filter_by_kwargs).first()
+        if existing:
+            return existing
+        else:
+            new_instance = self()
+            for arg, val in filter_by_kwargs.iteritems():
+                if hasattr(new_instance, arg):
+                    setattr(new_instance, arg, val)
+            return new_instance

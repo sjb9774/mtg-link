@@ -50,6 +50,7 @@ class ColorIdentity:
         'r': 'red',
         'g': 'green',
         'w': 'white',
+        'colorless': 'colorless'
     }
 
     _colors_full_to_abbr = {
@@ -57,7 +58,8 @@ class ColorIdentity:
         'black': 'b',
         'red': 'r',
         'green': 'g',
-        'white': 'w'
+        'white': 'w',
+        'colorless': 'colorless'
     }
 
     # any use for this?
