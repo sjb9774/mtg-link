@@ -25,7 +25,7 @@ class MtgCardSet(SmartObject):
 
 class MtgCard(SmartObject):
 
-    __fields__ = ['name', 'colors', 'type', 'subtype', 'legendary', 'artist', 'set_id',
+    __fields__ = ['name', 'colors', 'legendary', 'artist', 'set_id',
                   'promo', 'foil', 'power', 'toughness', 'mana_cost', 'loyalty',
                   'transform', 'half', 'rarity', 'multiverse_id', 'text', 'converted_mana_cost']
 
@@ -34,10 +34,10 @@ class MtgCard(SmartObject):
 
     def __iter__(self):
         for field in self.__fields__:
-            if field != 'set':
+            if hasattr(self, field):
                 yield field, getattr(self, field)
             else:
-                yield field, getattr(self, field).code if getattr(self, field) else None
+                yield field, None
 
 from mtg_link.mtg.colors import Color
 

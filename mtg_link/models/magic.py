@@ -47,6 +47,7 @@ class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
         MtgCard.__init__(self, power=power, toughness=toughness, **kwargs)
         db.IdMixin.__init__(self)
 
+    @property
     def converted_mana_cost(self):
         mana_costs = ManaCostModel.filter_by(card_id=self.id).all()
         cmc = 0
