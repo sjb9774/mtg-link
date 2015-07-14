@@ -92,4 +92,4 @@ class DefaultMixin():
             for arg, val in filter_by_kwargs.iteritems():
                 if hasattr(new_instance, arg):
                     setattr(new_instance, arg, val)
-            return new_instance
+            return new_instance.insert(commit=False)

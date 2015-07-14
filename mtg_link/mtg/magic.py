@@ -25,7 +25,7 @@ class MtgCardSet(SmartObject):
 
 class MtgCard(SmartObject):
 
-    __fields__ = ['name', 'colors', 'type', 'subtype', 'legendary', 'artist', 'set',
+    __fields__ = ['name', 'colors', 'type', 'subtype', 'legendary', 'artist', 'set_id',
                   'promo', 'foil', 'power', 'toughness', 'mana_cost', 'loyalty',
                   'transform', 'half', 'rarity', 'multiverse_id', 'text', 'converted_mana_cost']
 
@@ -59,9 +59,6 @@ class ManaSymbol:
         else:
             self.colorless = True
             self._color_abbrs = ['N']
-
-        if not self.colorless and count != 1:
-            raise ValueError('Count must always be 1 for X and colored mana symbols')
 
         if colors and x:
             raise ValueError('X-cost mana-symbols aren\'t colored.')
@@ -109,3 +106,13 @@ class ManaSymbol:
     def __repr__(self):
         return '<ManaSymbol instance "{symbol}" at {address}>'.format(symbol=self(),
                                                                       address=hex(id(self)))
+
+class Type:
+
+    def __init__(self, name=None):
+        self.name = name
+
+class Subtype:
+
+    def __init__(self, name=None):
+        self.name = name

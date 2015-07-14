@@ -1,29 +1,27 @@
-from sqlalchemy import Column, VARCHAR, Integer, Boolean, ForeignKey, Enum, Date
+from sqlalchemy import Column, VARCHAR, Integer, Boolean, ForeignKey, Enum, Date, Float
+from sqlalchemy.orm import  relationship
 from mtg_link import db
-from mtg_link.mtg.magic import MtgCard, MtgCardSet, ManaSymbol
+from mtg_link.mtg.magic import MtgCard, MtgCardSet, ManaSymbol, Type, Subtype
 from mtg_link.mtg.colors import Color
 from mtg_link.mtg import ALL_COLOR_COMBINATIONS, TYPES, SET_TYPES
 
 class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
     __tablename__ = 'cards'
 
-    __fields__ = MtgCard.__fields__ + []
+    __fields__ = MtgCard.__fields__ + ['raw_power', 'raw_toughness']
 
     multiverse_id = Column(Integer)
     name = Column(VARCHAR(200))
     set_id = Column(VARCHAR(db.id_length), ForeignKey('sets.id'))
     colors = Column(Enum(*['/'.join(c) for c in ALL_COLOR_COMBINATIONS]))
-    type1 = Column(Enum(*TYPES))
-    type2 = Column(Enum(*TYPES))
-    subtype1 = Column(VARCHAR(100))
-    subtype2 = Column(VARCHAR(100))
 
-    power = Column(Integer)
-    toughness = Column(Integer)
+    power = Column(Float)
+    toughness = Column(Float)
+    raw_power = Column(VARCHAR(25))
+    raw_toughness = Column(VARCHAR(25))
     loyalty = Column(Integer)
     foil = Column(Enum('foil', 'normal', 'special'))
     converted_mana_cost = Column(Integer)
-    mana_cost_id = Column(VARCHAR(db.id_length), ForeignKey('mana_costs.id'))
     # can we use a foreign key or will the constraint always fail due to circular referencing?
     # ie Ludevic's Subject.transform_id = 'xxxx' = Ludevic's Abomination.transform_id
     transform_multiverse_id = Column(VARCHAR(db.id_length))
@@ -31,8 +29,8 @@ class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
     text = Column(VARCHAR(1000))
 
     def __init__(self, **kwargs):
-        power = None
-        toughness = None
+        power = kwargs.get('power')
+        toughness = kwargs.get('toughness')
         for pt in ('power', 'toughness'):
             stat = kwargs.pop(pt, None)
             if type(stat) == str or type(stat) == unicode:
@@ -49,15 +47,12 @@ class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
         MtgCard.__init__(self, power=power, toughness=toughness, **kwargs)
         db.IdMixin.__init__(self)
 
-    @classmethod
-    def db_model_from_class(cls, mtg_card_instance):
-        mtg_card_properties = dict(mtg_card_instance)
-        subtypes = mtg_card_properties.pop('subtypes')
-        if len(subtypes) > 2:
-            # TODO: log this
-            print "More than two subtypes on card {mtg_card_instance.multiverse_id}!".format(**locals())
-        mtg_card_properties['subtype1'], mtg_card_properties['subtype2'] = subtypes
-        return cls(**dict(mtg_card_properties))
+    def converted_mana_cost(self):
+        mana_costs = ManaCostModel.filter_by(card_id=self.id).all()
+        cmc = 0
+        for mc in mana_costs:
+            cmc += mc.count * mc.mana_symbol.value
+        return cmc
 
 class MtgCardSetModel(db.Base, db.DefaultMixin, db.IdMixin, MtgCardSet):
 
@@ -67,81 +62,12 @@ class MtgCardSetModel(db.Base, db.DefaultMixin, db.IdMixin, MtgCardSet):
     block = Column(VARCHAR(200))
     release_date = Column(Date)
     set_type = Column(Enum(*SET_TYPES))
+    cards = relationship('MtgCardModel', backref='set')
 
     def __init__(self, **kwargs):
         MtgCardSet.__init__(self, **kwargs)
         db.IdMixin.__init__(self)
 
-'''
-class ManaCostModel(db.Base, db.DefaultMixin, db.IdMixin):
-
-    __tablename__ = 'mana_costs'
-
-    g_cost = Column(Integer, default=0)
-    b_cost = Column(Integer, default=0)
-    r_cost = Column(Integer, default=0)
-    u_cost = Column(Integer, default=0)
-    w_cost = Column(Integer, default=0)
-
-    colorless_cost = Column(Integer, default=0)
-    x = Column(Integer, default=0)
-    converted_mana_cost = Column(Integer, default=0)
-
-    # Not scalable, but currently all Phyrexian mana using cards have all colored mana
-    # as phyrexian, so True here means all colored mana is Phyrexian
-    phyrexian = Column(Boolean, default=False)
-
-    # HYBRID MANA
-    ## Black
-    bg_cost = Column(Integer, default=0)
-    br_cost = Column(Integer, default=0)
-    bu_cost = Column(Integer, default=0)
-    bw_cost = Column(Integer, default=0)
-
-    ## Green
-    gr_cost = Column(Integer, default=0)
-    gu_cost = Column(Integer, default=0)
-    gw_cost = Column(Integer, default=0)
-
-    ## Red
-    ru_cost = Column(Integer, default=0)
-    rw_cost = Column(Integer, default=0)
-
-    ## Blue
-    uw_cost = Column(Integer, default=0)
-
-    ## Hybrid white costs are completely covered in the other colors
-
-    @classmethod
-    def from_mana_symbols(cls, *args):
-        mana_cost = cls()
-        cmc = 0
-        for mana_symbol in args:
-            attr = None
-            if mana_symbol.x:
-                attr = 'x'
-            elif mana_symbol.is_hybrid():
-                prefix = ''.join([c.abbreviation for c in mana_symbol.get_colors()])
-                attr = prefix + '_cost'
-            elif not mana_symbol.colorless:
-                color = mana_symbol.get_colors()[0]
-                attr = color.abbreviation + '_cost'
-
-            cmc += mana_symbol.count
-
-            if attr:
-                # if None or 0
-                if not getattr(mana_cost, attr):
-                    setattr(mana_cost, attr, 1)
-                else:
-                    # increment
-                    setattr(mana_cost, attr, getattr(mana_cost, attr) + 1)
-
-            if mana_symbol.phyrexian:
-                mana_cost.phyrexian = True
-        mana_cost.converted_mana_cost = cmc
-        return mana_cost
-'''
 
 from sqlalchemy import event
 class ManaSymbolModel(db.IdMixin, db.Base, db.DefaultMixin, ManaSymbol):
@@ -155,7 +81,7 @@ class ManaSymbolModel(db.IdMixin, db.Base, db.DefaultMixin, ManaSymbol):
     w = Column(Boolean, default=False)
     colorless = Column(Boolean, default=False)
     x = Column(Boolean, default=False)
-    value = Column(Integer, default=1)
+    value = Column(Float, default=1)
 
     label = Column(VARCHAR(10))
 
@@ -199,3 +125,31 @@ class ManaCostModel(db.IdMixin, db.Base, db.DefaultMixin):
     card_id = Column(VARCHAR(db.id_length), ForeignKey('cards.id'))
     mana_symbol_id = Column(VARCHAR(db.id_length), ForeignKey('mana_symbols.id'))
     count = Column(Integer)
+    mana_symbol = relationship('ManaSymbolModel')
+class TypeModel(db.IdMixin, db.Base, db.DefaultMixin, Type):
+
+    __tablename__ = 'types'
+
+    name = Column(VARCHAR(200))
+
+class SubtypeModel(db.IdMixin, db.Base, db.DefaultMixin, Subtype):
+
+    __tablename__ = 'subtypes'
+
+    name = Column(VARCHAR(200))
+
+class XCardType(db.IdMixin, db.Base, db.DefaultMixin):
+
+    __tablename__ = 'x_card_types'
+
+    card_id = Column(VARCHAR(db.id_length), ForeignKey('cards.id'))
+    type_id = Column(VARCHAR(db.id_length), ForeignKey('types.id'))
+    priority = Column(Integer)
+
+class XCardSubtype(db.IdMixin, db.Base, db.DefaultMixin):
+
+    __tablename__ = 'x_card_subtypes'
+
+    card_id = Column(VARCHAR(db.id_length), ForeignKey('cards.id'))
+    subtype_id = Column(VARCHAR(db.id_length), ForeignKey('subtypes.id'))
+    priority = Column(Integer)
