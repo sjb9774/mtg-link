@@ -273,7 +273,7 @@ def gen_print(g, start_msg='Starting...', done_msg='Done!'):
         problem_progress = g.next()
     print done_msg
 
-if __name__ == "__main__":
+def do_all():
     start = time.time()
     try:
         prep_mana_symbols()
@@ -284,3 +284,6 @@ if __name__ == "__main__":
         db.Session.rollback()
         raise
     print 'Total processing time: {time}'.format(time=time.time()-start)
+
+if __name__ == "__main__":
+    do_all()
