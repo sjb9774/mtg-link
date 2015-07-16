@@ -13,6 +13,27 @@ my_session_maker = scoped_session(sessionmaker(bind=engine))
 Session = my_session_maker()
 Base = declarative_base()
 
+# python 2.x does not support a single kwarg after variable-length positional args :\
+# manually parse drop_all_kwarg for 'drop_all' flag
+def drop_tables(*tables, **drop_all_kwarg):
+    from _mysql_exceptions import IntegrityError
+    global engine
+    from mtg_link.models import magic
+    drop_all = drop_all_kwarg.get('drop_all', False)
+    go_again = True
+    all_attrs = [attr for attr in dir(magic) if hasattr(getattr(magic, attr), '__table__')]
+    while go_again:
+        go_again = False
+        for attr_name in all_attrs:
+            attr = getattr(magic, attr_name)
+            if attr.__tablename__ in tables or drop_all:
+                try:
+                    attr.__table__.drop(engine, checkfirst=True)
+                # foreign key constraint, we'll get it next time ;)
+                except:
+                    go_again = True
+
+
 def initialize():
     global Session
     global Base

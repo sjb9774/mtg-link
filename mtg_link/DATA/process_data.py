@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from mtg_link.mtg.magic import MtgCardSet, MtgCard, ManaSymbol
 from mtg_link.mtg.colors import Color
 from mtg_link.mtg import TYPES, ALL_COLOR_COMBINATIONS, COLORS
@@ -43,8 +44,8 @@ def do_data_process(*sets):
     total_sets = 0
     for set_code, set_data in CARD_DATA:
         total_sets += 1
-        print 'Processing set {set_code}...'.format(set_code=set_code)
-        mtg[set_code] = {'set': None, 'cards': []}
+        print 'Processing set {set_code} #{num}...'.format(set_code=set_code, num=total_sets)
+        mtg[set_code] = {'set': None, 'cardnums': []}
         mtg[set_code]['set'] = make_instance(MtgCardSetModel, card_set_prop_map, **set_data)
         for card_dict in set_data['cards']:
             total_cards += 1
@@ -175,11 +176,10 @@ def do_data_process(*sets):
                     transform_name = [name for name in card_dict['names'] if name != card_dict['name']][0]
                     transform_map[transform_name] = card
             mtg[set_code]['cards'].append(card)
-        print 'Set completed, took {duration} seconds to process {total_sets} sets.'.format(duration=time.time()-set_time,
-                                                                                            total_sets=total_sets)
+        print 'Set completed, took {duration} seconds to process'.format(duration=time.time()-set_time)
         set_time = time.time()
-    print 'Processing done, total time {total_time} seconds to process {total_cards} cards.'.format(total_time=time.time()-stime,
-                                                                                                    total_cards=total_cards)
+        total_time = time.time() - stime
+    print 'Processing done, total time {total_time} seconds to process {total_sets} sets and {total_cards} cards.'.format(**locals())
     return mtg, mana_costs, types, xtypes
 
 def make_instance(cls, property_map, **kwargs):
@@ -196,6 +196,9 @@ def make_instance(cls, property_map, **kwargs):
             new_dict[kw] = arg
     instance = cls(**new_dict)
     return instance
+
+def detupled_list(lst):
+    return [tup[0] for tup in lst]
 
 def mysql_dump(data):
     start = time.time()
