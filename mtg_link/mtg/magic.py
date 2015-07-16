@@ -27,7 +27,7 @@ class MtgCard(SmartObject):
 
     __fields__ = ['name', 'colors', 'legendary', 'artist', 'set_id',
                   'promo', 'foil', 'power', 'toughness', 'mana_cost', 'loyalty',
-                  'transform', 'half', 'rarity', 'multiverse_id', 'text', 'converted_mana_cost']
+                  'transform', 'half', 'rarity', 'multiverse_id', 'text']
 
     def __init__(self, **kwargs):
         super(MtgCard, self).__init__(**kwargs)

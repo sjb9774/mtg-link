@@ -9,9 +9,9 @@ from logging import Logger
 import time
 import re
 
-def do_data_process():
+def do_data_process(*sets):
     print "Beginning card process..."
-    CARD_DATA = get_card_data()
+    CARD_DATA = get_card_data(*sets)
     stime = time.time()
     mtg = {}
     mana_costs = []
@@ -39,11 +39,15 @@ def do_data_process():
     mana_cost_regx_str = r'\s*\{([\w\d/]+)\}\s*'
     mana_cost_regx = re.compile(mana_cost_regx_str)
     set_time = time.time()
+    total_cards = 0
+    total_sets = 0
     for set_code, set_data in CARD_DATA:
+        total_sets += 1
         print 'Processing set {set_code}...'.format(set_code=set_code)
         mtg[set_code] = {'set': None, 'cards': []}
         mtg[set_code]['set'] = make_instance(MtgCardSetModel, card_set_prop_map, **set_data)
         for card_dict in set_data['cards']:
+            total_cards += 1
             # flags for logging
             cl_hybrid = False
             phy = False
@@ -171,9 +175,11 @@ def do_data_process():
                     transform_name = [name for name in card_dict['names'] if name != card_dict['name']][0]
                     transform_map[transform_name] = card
             mtg[set_code]['cards'].append(card)
-        print 'Set completed, took {duration} seconds.'.format(duration=time.time()-set_time)
+        print 'Set completed, took {duration} seconds to process {total_sets} sets.'.format(duration=time.time()-set_time,
+                                                                                            total_sets=total_sets)
         set_time = time.time()
-    print 'Processing done, total time {total_time} seconds.'.format(total_time=time.time()-stime)
+    print 'Processing done, total time {total_time} seconds to process {total_cards} cards.'.format(total_time=time.time()-stime,
+                                                                                                    total_cards=total_cards)
     return mtg, mana_costs, types, xtypes
 
 def make_instance(cls, property_map, **kwargs):
@@ -199,10 +205,10 @@ def mysql_dump(data):
     num_sets = len(cards.keys())
     j = 0
     for set_code, info_dict in cards.iteritems():
+        j += 1
         print "Set #{current} of {total}...".format(current=j, total=num_sets)
         set = info_dict['set'].insert()
         num_cards = len(info_dict['cards'])
-        j += 1
         for i, card in enumerate(info_dict['cards']):
             card.set_id = set.id
             card.insert(commit=False)
@@ -218,7 +224,8 @@ def mysql_dump(data):
         if i != 0 and i % commit_interval == 0:
             print "{costs}/{total} mana costs committed.".format(costs=i, total=total_costs)
             db.Session.commit()
-    print 'Mana costs committed, took {time} seconds.'.format(time=time.time()-last_start)
+    print '{total} mana costs committed, took {time} seconds.'.format(time=time.time()-last_start,
+                                                                      total=total_costs)
     last_start = time.time()
 
     total_types = len(types)
@@ -227,7 +234,8 @@ def mysql_dump(data):
         if i != 0 and i % commit_interval == 0:
             print "{types}/{total} types committed.".format(types=i, total=total_types)
             db.Session.commit()
-    print 'Types committed, took {time} seconds.'.format(time=time.time()-last_start)
+    print '{total} types committed, took {time} seconds.'.format(time=time.time()-last_start,
+                                                                 total=total_types)
     last_start = time.time()
 
     total_xtypes = len(xtypes)
@@ -237,7 +245,8 @@ def mysql_dump(data):
             print "{types}/{total} xtypes committed.".format(types=i, total=total_types)
             db.Session.commit()
 
-    print 'Subtypes committed, took {time} seconds.'.format(time=time.time()-last_start)
+    print '{total} xtypes committed, took {time} seconds.'.format(time=time.time()-last_start,
+                                                                    total=total_xtypes)
     last_start = time.time()
     print 'Total commit time: {time} seconds.'.format(time=time.time()-start)
 
@@ -273,11 +282,11 @@ def gen_print(g, start_msg='Starting...', done_msg='Done!'):
         problem_progress = g.next()
     print done_msg
 
-def do_all():
+def do_all(*sets):
     start = time.time()
     try:
         prep_mana_symbols()
-        mtg_data = do_data_process()
+        mtg_data = do_data_process(*sets)
         mysql_dump(mtg_data)
     except KeyboardInterrupt:
         print 'Rolling back before exit!'

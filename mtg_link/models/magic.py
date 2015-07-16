@@ -1,4 +1,4 @@
-from sqlalchemy import Column, VARCHAR, Integer, Boolean, ForeignKey, Enum, Date, Float
+from sqlalchemy import Table, Column, VARCHAR, Integer, Boolean, ForeignKey, Enum, Date, Float
 from sqlalchemy.orm import  relationship
 from mtg_link import db
 from mtg_link.mtg.magic import MtgCard, MtgCardSet, ManaSymbol, Type, Subtype
@@ -127,6 +127,20 @@ class ManaCostModel(db.IdMixin, db.Base, db.DefaultMixin):
     mana_symbol_id = Column(VARCHAR(db.id_length), ForeignKey('mana_symbols.id'))
     count = Column(Integer)
     mana_symbol = relationship('ManaSymbolModel')
+
+'''ruling_assoc_table = Table('cards_to_rulings', db.Base.metadata,
+                            Column('card_id', VARCHAR(db.id_length), ForeignKey('cards.id')),
+                            Column('ruling_id', VARCHAR(db.id_length), ForeignKey('rulings.id')))
+
+class RulingModel(db.IdMixin, db.Base, db.DefaultMixin):
+
+    __tablename__ = 'rulings'
+
+    card_name = Column(VARCHAR(250))
+    date = Column(Date)
+    ruling = Column(VARCHAR(1000))
+    cards = relationship('cards', backref='rulings', secondary=ruling_assoc_table)'''
+
 class TypeModel(db.IdMixin, db.Base, db.DefaultMixin, Type):
 
     __tablename__ = 'types'
