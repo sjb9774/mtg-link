@@ -4,7 +4,7 @@ from mtg_link.mtg.colors import Color
 from mtg_link.mtg import TYPES, ALL_COLOR_COMBINATIONS, COLORS
 from mtg_link.models.magic import MtgCardSetModel, MtgCardModel, ManaCostModel, ManaSymbolModel
 from mtg_link.models.magic import TypeModel, SubtypeModel, XCardType, XCardSubtype
-from mtg_link.DATA import get_card_data
+from mtg_link.DATA.card_data_handler import get_card_data
 from mtg_link import db
 from logging import Logger
 import time
@@ -45,7 +45,7 @@ def do_data_process(*sets):
     for set_code, set_data in CARD_DATA:
         total_sets += 1
         print 'Processing set {set_code} #{num}...'.format(set_code=set_code, num=total_sets)
-        mtg[set_code] = {'set': None, 'cardnums': []}
+        mtg[set_code] = {'set': None, 'cards': []}
         mtg[set_code]['set'] = make_instance(MtgCardSetModel, card_set_prop_map, **set_data)
         for card_dict in set_data['cards']:
             total_cards += 1
@@ -200,16 +200,16 @@ def make_instance(cls, property_map, **kwargs):
 def detupled_list(lst):
     return [tup[0] for tup in lst]
 
-def mysql_dump(data):
+def mysql_dump(data, commit_interval=500):
     start = time.time()
     last_start = time.time()
-    commit_interval = 200
+    commit_interval = commit_interval
     cards, costs, types, xtypes = data
     num_sets = len(cards.keys())
     j = 0
     for set_code, info_dict in cards.iteritems():
         j += 1
-        print "Set #{current} of {total}...".format(current=j, total=num_sets)
+        print "Committing set #{current} of {total}...".format(current=j, total=num_sets)
         set = info_dict['set'].insert()
         num_cards = len(info_dict['cards'])
         for i, card in enumerate(info_dict['cards']):
