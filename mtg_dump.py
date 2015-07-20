@@ -34,8 +34,8 @@ if __name__ == '__main__':
         sets = get_raw_card_data().keys()
     if not args.force:
         existing_sets = MtgCardSetModel.filter(MtgCardSetModel.code.in_(sets)).all()
-        existing_sets = [s.set_code for s in existing_sets]
-        if existing_sets:
+        existing_sets = [s.code for s in existing_sets]
+        if existing_sets and not args.force:
             print('These sets already existing the database, ignoring... \
                   (use --force to add them anyway, or --overwrite to overwrite)\n{sets}'.format(sets=', '.join(existing_sets)))
             sets = [s for s in s if s not in existing_sets]

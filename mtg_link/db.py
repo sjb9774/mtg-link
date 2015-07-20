@@ -92,6 +92,13 @@ class DefaultMixin():
         return Session.query(self).get(id)
 
     @classmethod
+    def join(self, other, column=None):
+        if column:
+            return Session.query(self).join(other, column)
+        else:
+            return Session.query(self).join(other)
+
+    @classmethod
     def all(self):
         return Session.query(self).filter(self.id != None).all()
 

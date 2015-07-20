@@ -128,10 +128,6 @@ class ManaCostModel(db.IdMixin, db.Base, db.DefaultMixin):
     count = Column(Integer)
     mana_symbol = relationship('ManaSymbolModel')
 
-'''ruling_assoc_table = Table('cards_to_rulings', db.Base.metadata,
-                            Column('card_id', VARCHAR(db.id_length), ForeignKey('cards.id')),
-                            Column('ruling_id', VARCHAR(db.id_length), ForeignKey('rulings.id')))
-
 class RulingModel(db.IdMixin, db.Base, db.DefaultMixin):
 
     __tablename__ = 'rulings'
@@ -139,7 +135,6 @@ class RulingModel(db.IdMixin, db.Base, db.DefaultMixin):
     card_name = Column(VARCHAR(250))
     date = Column(Date)
     ruling = Column(VARCHAR(1000))
-    cards = relationship('cards', backref='rulings', secondary=ruling_assoc_table)'''
 
 class TypeModel(db.IdMixin, db.Base, db.DefaultMixin, Type):
 

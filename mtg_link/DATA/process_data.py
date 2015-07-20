@@ -27,7 +27,7 @@ def do_data_process(*sets):
         'releaseDate': 'release_date',
         'type': 'set_type'
     }
-
+    import pudb; pudb.set_trace()
     card_prop_map = {
         'cmc': 'converted_mana_cost',
         'manaCost': 'mana_cost',
