@@ -4,9 +4,11 @@ from mtg_link.mtg.colors import Color
 from mtg_link.mtg import TYPES, ALL_COLOR_COMBINATIONS, COLORS
 from mtg_link.models.magic import MtgCardSetModel, MtgCardModel, ManaCostModel, ManaSymbolModel
 from mtg_link.models.magic import TypeModel, SubtypeModel, XCardType, XCardSubtype
+from mtg_link.models.magic import RulingModel, XCardRuling, FormatModel, XCardFormat
 from mtg_link.DATA.card_data_handler import get_card_data
 from mtg_link import db
 from logging import Logger
+from collections import OrderedDict
 import time
 import re
 
@@ -15,9 +17,12 @@ def do_data_process(*sets):
     CARD_DATA = get_card_data(*sets)
     stime = time.time()
     mtg = {}
+    all_data = OrderedDict()
     mana_costs = []
-    types = []
+    types = set()
     xtypes = []
+    formats, xformats = set(), []
+    rulings, xrulings = [], []
     mana_symbols = ManaSymbolModel.all()
     if not mana_symbols:
         prep_mana_symbols()
@@ -27,7 +32,7 @@ def do_data_process(*sets):
         'releaseDate': 'release_date',
         'type': 'set_type'
     }
-    import pudb; pudb.set_trace()
+
     card_prop_map = {
         'cmc': 'converted_mana_cost',
         'manaCost': 'mana_cost',
@@ -137,6 +142,26 @@ def do_data_process(*sets):
                                  set_id=mtg[set_code]['set'].id,
                                  **card_dict)
 
+            for ruling_data in card_dict.get('rulings', []):
+                r = RulingModel()
+                r.date = ruling_data['date']
+                r.ruling = ruling_data['text']
+                xr = XCardRuling()
+                xr.card_id = card.id
+                xr.ruling_id = r.id
+                rulings.append(r)
+                xrulings.append(xr)
+
+
+            for format_name, format_legality in card_dict.get('legalities', {}).iteritems():
+                if format_legality.lower() == 'legal':
+                    format_model = FormatModel.get_or_make(name=format_name)
+                    xformat = XCardFormat()
+                    xformat.format_id = format_model.id
+                    xformat.card_id = card.id
+                    formats.add(format_model)
+                    xformats.append(xformat)
+
             # types and mana costs are dissociated from the actual card now, so process after
             for type_type in (('types', TypeModel, XCardType), ('subtypes', SubtypeModel, XCardSubtype)):
                 type_str, type_cls, x_cls = type_type
@@ -152,7 +177,7 @@ def do_data_process(*sets):
                             x_thing.type_id = instance.id
                         else:
                             x_thing.subtype_id = instance.id
-                        types.append(instance)
+                        types.add(instance)
                         xtypes.append(x_thing)
 
 
@@ -180,7 +205,7 @@ def do_data_process(*sets):
         set_time = time.time()
         total_time = time.time() - stime
     print 'Processing done, total time {total_time} seconds to process {total_sets} sets and {total_cards} cards.'.format(**locals())
-    return mtg, mana_costs, types, xtypes
+    return mtg, mana_costs, list(types), xtypes, rulings, xrulings, list(formats), xformats
 
 def make_instance(cls, property_map, **kwargs):
     new_dict = {}
@@ -202,57 +227,33 @@ def detupled_list(lst):
 
 def mysql_dump(data, commit_interval=500):
     start = time.time()
-    last_start = time.time()
     commit_interval = commit_interval
-    cards, costs, types, xtypes = data
-    num_sets = len(cards.keys())
-    j = 0
-    for set_code, info_dict in cards.iteritems():
-        j += 1
-        print "Committing set #{current} of {total}...".format(current=j, total=num_sets)
-        set = info_dict['set'].insert()
-        num_cards = len(info_dict['cards'])
-        for i, card in enumerate(info_dict['cards']):
-            card.set_id = set.id
-            card.insert(commit=False)
-            if i != 0 and i % commit_interval == 0:
-                print "\tCard {current} committed of {total}".format(current=i, total=num_cards)
-                db.Session.commit()
-    print 'Sets committed, took {time} seconds.'.format(time=time.time()-start)
-    last_start = time.time()
-
-    total_costs = len(costs)
-    for i, cost in enumerate(costs):
-        cost.insert(commit=False)
-        if i != 0 and i % commit_interval == 0:
-            print "{costs}/{total} mana costs committed.".format(costs=i, total=total_costs)
-            db.Session.commit()
-    print '{total} mana costs committed, took {time} seconds.'.format(time=time.time()-last_start,
-                                                                      total=total_costs)
-    last_start = time.time()
-
-    total_types = len(types)
-    for i, t in enumerate(types):
-        t.insert(commit=False)
-        if i != 0 and i % commit_interval == 0:
-            print "{types}/{total} types committed.".format(types=i, total=total_types)
-            db.Session.commit()
-    print '{total} types committed, took {time} seconds.'.format(time=time.time()-last_start,
-                                                                 total=total_types)
-    last_start = time.time()
-
-    total_xtypes = len(xtypes)
-    for i, t in enumerate(xtypes):
-        t.insert(commit=False)
-        if i != 0 and i % commit_interval == 0:
-            print "{types}/{total} xtypes committed.".format(types=i, total=total_types)
-            db.Session.commit()
-
-    print '{total} xtypes committed, took {time} seconds.'.format(time=time.time()-last_start,
-                                                                    total=total_xtypes)
-    last_start = time.time()
+    card_map, costs, types, xtypes, rulings, xrulings, formats, xformats = data
+    print 'Setting set ids to cards...'
+    sets, cards = [], []
+    for set_code, info_dict in card_map.iteritems():
+        sets.append(info_dict['set'])
+        for card in info_dict['cards']:
+            card.set_id = info_dict['set'].id
+            cards.append(card)
+    print 'Done!'
+    for insertables in (sets, cards, costs, types, xtypes, rulings, xrulings, formats, xformats):
+        if insertables:
+            verbose_commit(insertables, insertables[0].__tablename__, commit_interval=commit_interval)
     print 'Total commit time: {time} seconds.'.format(time=time.time()-start)
 
+def verbose_commit(insertables, name, commit_interval=500):
+    start = time.time()
+    total = len(insertables)
+    for i, t in enumerate(insertables, start=1):
+        t.insert(commit=False)
+        if i != 0 and i % commit_interval == 0:
+            print "{current}/{total} {name} committed.".format(current=i, total=total, name=name)
+            db.Session.commit()
+    db.Session.commit()
+    print '{total} {name} committed, took {time} seconds.'.format(time=time.time()-start,
+                                                                  name=name,
+                                                                  total=total)
 
 def prep_mana_symbols():
     if ManaSymbolModel.all():

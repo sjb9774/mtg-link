@@ -9,9 +9,9 @@ from mtg_link.models.magic import MtgCardSetModel
 
 if __name__ == '__main__':
     p = ArgumentParser()
-    p.add_argument('sets', nargs='*', action='append',
+    p.add_argument('sets', nargs='*',
                     help='The set codes of the sets to process. If none are provided, all sets will be processed.')
-    p.add_argument('-i', '--invert', required=False, action='store_true', default=True,
+    p.add_argument('-i', '--invert', required=False, action='store_true', default=False,
                     help='Invert the given set codes such that all sets EXCEPT those will be processed.')
     p.add_argument('-f', '--force', required=False, action='store_true',
                     help='Add sets/cards even if matching sets/cards already exist in the database.\
@@ -23,9 +23,11 @@ if __name__ == '__main__':
                     help='Drop all tables and recreate them from the models before doing any processing.')
     p.add_argument('-o', '--overwrite', action='store_true',
                     help='Overwrite any existing cards or sets that would be added. (May significantly increase processing time)')
+    p.add_argument('--dry', action='store_true', default=False,
+                    help='Adding this flag prevents any database operations from actually being committed (primarily for debugging).')
 
     args = p.parse_args()
-    if args.drop:
+    if args.drop and not args.dry:
         db.drop_tables(drop_all=True)
         db.initialize()
     if args.sets:
@@ -43,9 +45,10 @@ if __name__ == '__main__':
     # TODO Make --force and --overwrite relevant
     try:
         start = time.time()
-        prep_mana_symbols()
-        data = do_data_process(*sets)
-        mysql_dump(data, commit_interval=args.commit_interval)
+        if not args.dry:
+            prep_mana_symbols()
+            data = do_data_process(*sets)
+            mysql_dump(data, commit_interval=args.commit_interval)
     except KeyboardInterrupt:
         print 'Rolling back before exit!'
         db.Session.rollback()

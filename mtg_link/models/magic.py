@@ -119,6 +119,7 @@ def refresh_colors(target, value, old_value, initiator):
         if value:
             mana_symbol.colors.append(Color(initiator.key))
 
+
 class ManaCostModel(db.IdMixin, db.Base, db.DefaultMixin):
 
     __tablename__ = 'mana_costs'
@@ -128,13 +129,33 @@ class ManaCostModel(db.IdMixin, db.Base, db.DefaultMixin):
     count = Column(Integer)
     mana_symbol = relationship('ManaSymbolModel')
 
+class FormatModel(db.IdMixin, db.Base, db.DefaultMixin):
+
+    __tablename__ = 'formats'
+
+    name = Column(VARCHAR(200))
+
 class RulingModel(db.IdMixin, db.Base, db.DefaultMixin):
 
     __tablename__ = 'rulings'
 
-    card_name = Column(VARCHAR(250))
     date = Column(Date)
-    ruling = Column(VARCHAR(1000))
+    ruling = Column(VARCHAR(5000))
+
+
+class XCardRuling(db.IdMixin, db.Base, db.DefaultMixin):
+
+    __tablename__ = 'x_card_rulings'
+
+    card_id = Column(VARCHAR(db.id_length), ForeignKey('cards.id'))
+    ruling_id = Column(VARCHAR(db.id_length), ForeignKey('rulings.id'))
+
+class XCardFormat(db.IdMixin, db.Base, db.DefaultMixin):
+
+    __tablename__ = 'x_card_formats'
+
+    card_id = Column(VARCHAR(db.id_length), ForeignKey('cards.id'))
+    format_id = Column(VARCHAR(db.id_length), ForeignKey('formats.id'))
 
 class TypeModel(db.IdMixin, db.Base, db.DefaultMixin, Type):
 
@@ -142,11 +163,13 @@ class TypeModel(db.IdMixin, db.Base, db.DefaultMixin, Type):
 
     name = Column(VARCHAR(200))
 
+
 class SubtypeModel(db.IdMixin, db.Base, db.DefaultMixin, Subtype):
 
     __tablename__ = 'subtypes'
 
     name = Column(VARCHAR(200))
+
 
 class XCardType(db.IdMixin, db.Base, db.DefaultMixin):
 
@@ -155,6 +178,7 @@ class XCardType(db.IdMixin, db.Base, db.DefaultMixin):
     card_id = Column(VARCHAR(db.id_length), ForeignKey('cards.id'))
     type_id = Column(VARCHAR(db.id_length), ForeignKey('types.id'))
     priority = Column(Integer)
+
 
 class XCardSubtype(db.IdMixin, db.Base, db.DefaultMixin):
 
