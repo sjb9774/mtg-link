@@ -147,14 +147,14 @@ class XCardRuling(db.IdMixin, db.Base, db.DefaultMixin):
 
     __tablename__ = 'x_card_rulings'
 
-    card_id = Column(VARCHAR(db.id_length), ForeignKey('cards.id'))
+    card_name = Column(VARCHAR(db.id_length), ForeignKey('cards.name'))
     ruling_id = Column(VARCHAR(db.id_length), ForeignKey('rulings.id'))
 
 class XCardFormat(db.IdMixin, db.Base, db.DefaultMixin):
 
     __tablename__ = 'x_card_formats'
 
-    card_id = Column(VARCHAR(db.id_length), ForeignKey('cards.id'))
+    card_name = Column(VARCHAR(db.id_length), ForeignKey('cards.name'))
     format_id = Column(VARCHAR(db.id_length), ForeignKey('formats.id'))
 
 class TypeModel(db.IdMixin, db.Base, db.DefaultMixin, Type):

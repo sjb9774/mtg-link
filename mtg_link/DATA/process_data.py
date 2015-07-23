@@ -156,9 +156,10 @@ def do_data_process(*sets):
             for format_name, format_legality in card_dict.get('legalities', {}).iteritems():
                 if format_legality.lower() == 'legal':
                     format_model = FormatModel.get_or_make(name=format_name)
-                    xformat = XCardFormat()
+                    # TODO: RELATE CARD NAME AND FORMAT ID IN XCARDFORMAT, LIKEWISE FOR RULINGS
+                    xformat = XCardFormat.get_or_make(card_name=card.name, format_)
                     xformat.format_id = format_model.id
-                    xformat.card_id = card.id
+                    xformat.card_name = card.name
                     formats.add(format_model)
                     xformats.append(xformat)
 
