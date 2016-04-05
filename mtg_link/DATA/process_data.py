@@ -147,7 +147,7 @@ def do_data_process(*sets):
                 r.date = ruling_data['date']
                 r.ruling = ruling_data['text']
                 xr = XCardRuling()
-                xr.card_id = card.id
+                xr.card_name = card.name
                 xr.ruling_id = r.id
                 rulings.append(r)
                 xrulings.append(xr)
@@ -157,7 +157,7 @@ def do_data_process(*sets):
                 if format_legality.lower() == 'legal':
                     format_model = FormatModel.get_or_make(name=format_name)
                     # TODO: RELATE CARD NAME AND FORMAT ID IN XCARDFORMAT, LIKEWISE FOR RULINGS
-                    xformat = XCardFormat.get_or_make(card_name=card.name, format_)
+                    xformat = XCardFormat()
                     xformat.format_id = format_model.id
                     xformat.card_name = card.name
                     formats.add(format_model)

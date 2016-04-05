@@ -11,7 +11,7 @@ class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
     __fields__ = MtgCard.__fields__ + ['raw_power', 'raw_toughness']
 
     multiverse_id = Column(Integer)
-    name = Column(VARCHAR(200))
+    name = Column(VARCHAR(200), nullable=False, index=True) # must create index for foreign keys that reference this
     set_id = Column(VARCHAR(db.id_length), ForeignKey('sets.id'))
     colors = Column(Enum(*['/'.join(c) for c in ALL_COLOR_COMBINATIONS]))
 
@@ -147,15 +147,15 @@ class XCardRuling(db.IdMixin, db.Base, db.DefaultMixin):
 
     __tablename__ = 'x_card_rulings'
 
-    card_name = Column(VARCHAR(db.id_length), ForeignKey('cards.name'))
-    ruling_id = Column(VARCHAR(db.id_length), ForeignKey('rulings.id'))
+    card_name = Column(VARCHAR(200), ForeignKey('cards.name'), nullable=False)
+    ruling_id = Column(VARCHAR(db.id_length), ForeignKey('rulings.id'), nullable=False)
 
 class XCardFormat(db.IdMixin, db.Base, db.DefaultMixin):
 
     __tablename__ = 'x_card_formats'
 
-    card_name = Column(VARCHAR(db.id_length), ForeignKey('cards.name'))
-    format_id = Column(VARCHAR(db.id_length), ForeignKey('formats.id'))
+    card_name = Column(VARCHAR(200), ForeignKey('cards.name'), nullable=False)
+    format_id = Column(VARCHAR(db.id_length), ForeignKey('formats.id'), nullable=False)
 
 class TypeModel(db.IdMixin, db.Base, db.DefaultMixin, Type):
 

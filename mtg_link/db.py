@@ -57,7 +57,7 @@ class IdMixin(object):
 
     @declared_attr
     def id(cls):
-        return Column(VARCHAR(id_length), name='id', primary_key=True, default=(lambda: str(uuid4())))
+        return Column(VARCHAR(id_length), name='id', primary_key=True, nullable=False, default=(lambda: str(uuid4())))
 
 
 class DefaultMixin():

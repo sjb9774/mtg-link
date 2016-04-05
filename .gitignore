@@ -4,3 +4,4 @@ conf.cfg
 *.log
 mtg_link/DATA/images/*
 .DS_Store
+.venv/

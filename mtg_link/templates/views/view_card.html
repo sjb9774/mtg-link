@@ -1,0 +1,17 @@
+{% extends 'views/view_base.html' %}
+{% block title %}View  Card{% endblock %}
+{% block body %}
+<div class='view-wrapper'>
+  <nav class='nav-bar'>
+  </nav>
+  <div class='card-view-wrapper'>
+    <div class='card-image-wrapper'>
+    </div>
+    <div class='card-info-wrapper'>
+      <img src="/image?name={{card.name}}">
+    </div>
+  </div>
+  <div class='footer'>
+  </div>
+</div>
+{% endblock %}
