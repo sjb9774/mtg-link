@@ -2,6 +2,7 @@ from mtg_link import app
 from flask import render_template, jsonify, request, send_from_directory
 from mtg_link.models.magic import MtgCardModel, MtgCardSetModel
 import json
+import db
 
 @app.route('/', methods=['GET'])
 def home():
@@ -21,9 +22,16 @@ def api_get_card():
 @app.route('/view/card', methods=['GET'])
 def view_card():
     args = request.args.to_dict()
-    card = MtgCardModel.filter_by(name=args.get('name')).first()
+    q = db.Session.query(MtgCardModel).join(MtgCardSetModel)\
+                                      .filter(MtgCardModel.name == args.get('name'))\
+                                      .filter(MtgCardModel.multiverse_id != None)
+    if args.get('set'):
+        q = q.filter(MtgCardSetModel.code==args.get('set'))
+    else:
+        q = q.order_by(MtgCardSetModel.release_date.desc())
+
+    card = q.first()
     if card:
-        print card.name
         return render_template("views/view_card.html", card=card)
     else:
         return None
@@ -31,5 +39,11 @@ def view_card():
 @app.route('/image', methods=['GET'])
 def image():
     args = request.args.to_dict()
-    card = MtgCardModel.filter_by(name=args.get('name')).first()
+    q = db.Session.query(MtgCardModel).join(MtgCardSetModel).filter(MtgCardSetModel.code==args.get('set')) if args.get('set') else MtgCardModel
+    card = q.filter(MtgCardModel.name == args.get('name')).first()
     return send_from_directory('/home/myaccount/Pictures', '{card.set.code}/{card.name} - {card.multiverse_id}.png'.format(card=card))
+
+@app.route('/search', methods=['GET'])
+def search():
+    args = request.args.to_dict()
+    return jsonify({'url': '/view/card?name={}'.format(args.get('name'))})

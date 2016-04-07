@@ -27,6 +27,7 @@ class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
     transform_multiverse_id = Column(VARCHAR(db.id_length))
     rarity = Column(Enum("common", "uncommon", "rare", "special", "mythic rare", "other", "promo", "basic land"))
     text = Column(VARCHAR(1000))
+    flavor = Column(VARCHAR(1000))
 
     def __init__(self, **kwargs):
         power = kwargs.get('power')
@@ -55,6 +56,24 @@ class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
             cmc += mc.count * mc.mana_symbol.value
         return cmc
 
+    @property
+    def transform_card(self):
+        if self.transform_multiverse_id:
+            return MtgCardModel.filter(MtgCardModel.multiverse_id==self.transform_multiverse_id).first()
+        elif self.multiverse_id:
+            return MtgCardModel.filter(MtgCardModel.transform_multiverse_id==self.multiverse_id).first()
+        else:
+            return None
+
+    @property
+    def all_sets(self):
+        sets = MtgCardSetModel.join(MtgCardModel, MtgCardModel.set_id == MtgCardSetModel.id)\
+                              .filter(MtgCardModel.name==self.name)\
+                              .filter(MtgCardModel.multiverse_id != None)\
+                              .order_by(MtgCardSetModel.release_date)\
+                              .all()
+        return sets
+
 class MtgCardSetModel(db.Base, db.DefaultMixin, db.IdMixin, MtgCardSet):
 
     __tablename__ = 'sets'
@@ -80,7 +99,7 @@ class ManaSymbolModel(db.IdMixin, db.Base, db.DefaultMixin, ManaSymbol):
     b = Column(Boolean, default=False)
     g = Column(Boolean, default=False)
     w = Column(Boolean, default=False)
-    colorless = Column(Boolean, default=False)
+    c = Column(Boolean, default=False)
     x = Column(Boolean, default=False)
     value = Column(Float, default=1)
 
@@ -96,7 +115,7 @@ class ManaSymbolModel(db.IdMixin, db.Base, db.DefaultMixin, ManaSymbol):
 # a couple of functions to bridge the gap between the database representation and the basic representation
 @event.listens_for(ManaSymbolModel, 'load')
 def set_colors(target, context):
-    colors = ('b', 'g', 'r', 'u', 'w', 'colorless')
+    colors = ('b', 'g', 'r', 'u', 'w', 'c')
     mana_symbol = target
     mana_symbol.colors = []
     for color in colors:

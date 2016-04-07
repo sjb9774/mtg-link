@@ -23,7 +23,9 @@ if __name__ == '__main__':
                                                                                name=card.name.encode('utf8'),
                                                                                mid=card.multiverse_id))
         if os.path.exists(card_path):
-            print '{card_path} for {card.name} ({card.multiverse_id}) already exists, skipping.'.format(**locals())
+            print '{card_path} for {card_name} ({mid}) already exists, skipping.'.format(card_path=card_path,
+                                                                                         card_name=card.name.encode('utf8'),
+                                                                                         mid=card.multiverse_id)
         else:
             while True:
                 print 'Ripping card #{num} of {total_cards} ({name} - {card.multiverse_id} of {card.set.code})'.format(num=num,

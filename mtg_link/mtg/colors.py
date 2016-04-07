@@ -50,7 +50,7 @@ class ColorIdentity:
         'r': 'red',
         'g': 'green',
         'w': 'white',
-        'colorless': 'colorless'
+        'c': 'colorless'
     }
 
     _colors_full_to_abbr = {
@@ -59,11 +59,11 @@ class ColorIdentity:
         'red': 'r',
         'green': 'g',
         'white': 'w',
-        'colorless': 'colorless'
+        'colorless': 'c'
     }
 
     # any use for this?
-    _colorless = ('colorless', 'colorless')
+    _colorless = ('cs', 'colorless')
 
     _all_colors = [_green, _blue, _white, _black, _red]
 

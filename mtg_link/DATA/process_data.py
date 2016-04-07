@@ -62,9 +62,9 @@ def do_data_process(*sets):
             if 'manaCost' not in card_dict:
                 # defaults all costs to zero
                 mana_cost = ManaCostModel()
-                symbol = mana_symbol_dict.setdefault('colorless', ManaSymbolModel.get_or_make(x=False,
-                                                                                              phyrexian=False,
-                                                                                              **{k:(False if k != 'colorless' else True) for k in COLORS}))
+                symbol = mana_symbol_dict.setdefault('c', ManaSymbolModel.get_or_make(x=False,
+                                                                                      phyrexian=False,
+                                                                                      **{k:(False if k != 'c' else True) for k in COLORS}))
                 mana_cost.count = 0
                 mana_symbol_id = symbol.id
             else:
@@ -72,9 +72,9 @@ def do_data_process(*sets):
                 # token = {4} or {g/w} or {r} etc...
                 for token in mana_cost_regx.findall(raw_mana_cost):
                     if token.isdigit():
-                        symbol = mana_symbol_dict.setdefault('colorless', ManaSymbolModel.get_or_make(x=False,
-                                                                                                      phyrexian=False,
-                                                                                                      **{k:(False if k != 'colorless' else True) for k in COLORS}))
+                        symbol = mana_symbol_dict.setdefault('c', ManaSymbolModel.get_or_make(x=False,
+                                                                                              phyrexian=False,
+                                                                                              **{k:(False if k != 'c' else True) for k in COLORS}))
                         current = cost.setdefault(symbol, 0)
                         cost[symbol] = current + int(token)
                     elif token.lower() in ('x', 'y', 'z'): # Ultimate Nightmare of Wizard's of the Coast Customer Service :\
@@ -90,7 +90,7 @@ def do_data_process(*sets):
                         if colorless_pieces:
                             cl_hybrid = True
                             value = colorless_pieces[0]
-                            colors.append('colorless')
+                            colors.append('c')
                         elif [half_cost for half_cost in parts if half_cost.lower().find('h') != -1]:
                             # if any of these "colors" have 'h' in them, they're a half-mana from Unhinged :(
                             value = .5

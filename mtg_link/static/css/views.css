@@ -1,3 +1,98 @@
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: #FFFFFF;
+  width: 100%;
+  height: 100%;
+}
+
+p {
+  margin: 0px;
+}
+
+hr {
+  margin: 0px;
+}
+
+.navbar {
+  width: 100%; !important
+}
+
+.navbar > .container-fluid {
+  padding-left: 10px;
+}
+
+.container-fluid {
+  padding: 0;
+  height: 100%;
+}
+
 .view-wrapper {
-  
+  background-color: #ededed;
+  height: 100%;
+}
+
+.card-view-wrapper {
+  padding: 10px;
+  text-align: center;
+}
+
+.card-view-bottom-section {
+  text-align: center;
+  height: 100%;
+}
+
+.card-info-wrapper {
+  width: 50%;
+  margin: auto;
+  padding-top: 25px;
+}
+
+p.card-view-card-name {
+  font-size: 42px;
+  font-weight: bold;
+}
+
+p.card-view-card-set {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.navbar-right {
+  margin-right: 0px;
+}
+
+.card-info-rules-text-section {
+  font-size: 16px;
+}
+
+.card-info-rules-text {
+  margin-top: 15px;
+  margin-bottom: 45px;
+}
+
+.card-image-wrapper {
+  text-align: center;
+  display: inline-block;
+  background-color: #FFFFFF;
+  padding: 10px;
+  width: 19%;
+  border-radius: 8px;
+}
+
+.card-view-transform-card {
+  width: 90%;
+  height: 90%;
+}
+
+.card-info-flavor-text {
+  font-style: italic;
+}
+
+.card-info-bottom-background {
+  background-color: #f8f8f8;
+  height: 100%;
 }
