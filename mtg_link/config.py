@@ -1,4 +1,5 @@
 from ConfigParser import ConfigParser
+import os
 
 class Config(object):
 
@@ -55,4 +56,8 @@ class ConfigSection(object):
             if get_attr('__auto_write'):
                 p.write(open(get_attr('__path'), 'r+'))
 
-config = Config('./conf.cfg', True)
+if not os.path.exists('./conf.cfg'):
+    print "conf.cfg does not exist! You'll need to create it, based off of dummy-config.cfg"
+    config = None
+else:
+    config = Config('./conf.cfg', True)

@@ -1,0 +1,24 @@
+{% extends 'views/view_base.html' %}
+{% block title %}404{% endblock %}
+{% block head %}
+<link rel='stylesheet' href='../static/css/views/errors.css' type='text/css'>
+{% endblock %}
+{% block body %}
+<div class='container'>
+  <div class='view-card-error-wrapper'>
+    <h1 class='error-code'>404</h1>
+    <h1 class='error-subtitle'>card not found</h1>
+  </div>
+  <div class='error-suggestions-wrapper'>
+    {% if suggestions %}
+    <h3>Maybe you meant?</h3>
+    <div class='error-suggestions'>
+        {% for card in suggestions %}
+          <a class='suggestion' href='/view/card?name={{card.name}}'>{{card.name}}</a><br/>
+        {% endfor %}
+      {% else %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

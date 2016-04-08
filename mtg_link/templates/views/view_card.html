@@ -1,0 +1,58 @@
+{% extends 'views/view_base.html' %}
+{% block title %}View  Card{% endblock %}
+{% block body %}
+<div class='container-fluid'>
+  <div class="card-view-top-section">
+  <div class='card-view-wrapper vertical-center horiztonal-center'>
+    <div class='container card-image-wrapper'>
+      <img src="/image?name={{card.name}}&set={{card.set.code}}">
+    </div>
+    {% if card.transform_card %}
+    <div class='container card-image-wrapper'>
+      <a href='/view/card?name={{card.transform_card.name}}&set={{card.set.code}}' class='card-view-transform-link'>
+        <img class='card-view-transform-card' src="/image?name={{card.transform_card.name}}">
+      </a>
+    </div>
+    {% endif %}
+  </div>
+  </div>
+  <div class='card-view-bottom-section'>
+    <div class='card-view-name-wrapper'>
+      <hr>
+      <p class='card-view-card-name'>{{card.name}}</p>
+      <p class='card-view-card-set'>{{card.set.name}}</p>
+      <hr>
+    </div>
+    <div class='card-view-sets-wrapper'>
+      {% for set in card.all_sets %}
+        {% if set.code == card.set.code %}
+          <span>{{set.code}}</span>
+        {% else %}
+        <a href='/view/card?name={{card.name}}&set={{set.code}}'>{{set.code}}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <hr>
+    <div class='card-info-bottom-background'>
+      <div class='card-info-wrapper'>
+        <p class='card-info-text'>
+          <div class='card-info-rules-text'>
+            {% if card.text %}
+              {% for text_section in card.text.split('\n') %}
+              <p class='card-info-rules-text-section'>{{text_section}}</p>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class='card-info-flavor-text'>
+            {% if card.flavor %}
+              <p class='card-info-flavor-text-section'>{{card.flavor}}</p>
+            {% endif %}
+          </div>
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class='footer'>
+  </div>
+</div>
+{% endblock %}
