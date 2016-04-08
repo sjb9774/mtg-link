@@ -1,6 +1,8 @@
 from mtg_link import app
-from flask import render_template, jsonify, request, send_from_directory
+from flask import render_template, jsonify, request, send_from_directory, abort
 from mtg_link.models.magic import MtgCardModel, MtgCardSetModel
+from mtg_link.utils.search import get_card_suggestions
+from jinja2 import TemplateNotFound
 import json
 import db
 
@@ -34,7 +36,18 @@ def view_card():
     if card:
         return render_template("views/view_card.html", card=card)
     else:
-        return None
+        return fourfour_wrapper(args.get('name'))
+
+@app.errorhandler(404)
+def four_o_four(err):
+    return render_template('views/404.html', suggestions=None), 404
+
+def fourfour_wrapper(card_name):
+    suggestions = get_card_suggestions(card_name)
+    if len(suggestions) == 1:
+        return render_template("views/view_card.html", card=suggestions[0])
+    else:
+        return render_template('views/404.html', suggestions=suggestions), 404
 
 @app.route('/image', methods=['GET'])
 def image():
@@ -46,4 +59,4 @@ def image():
 @app.route('/search', methods=['GET'])
 def search():
     args = request.args.to_dict()
-    return jsonify({'url': '/view/card?name={}'.format(args.get('name'))})
+    return jsonify({'url': '/view/card?name={}'.format(args.get('name')), 'success': True})

@@ -1,0 +1,27 @@
+html {
+  overflow: overlay;
+}
+
+.error-code {
+  font-weight: bold;
+  font-size: 272pt;
+  color: #3e3e3e;
+}
+
+.view-card-error-wrapper {
+  width: 100%;
+}
+
+.error-suggestions-wrapper {
+  margin-bottom: 50px;
+}
+
+.suggestion {
+  margin-left: 5px;
+}
+
+.error-subtitle {
+  width: 25%;
+  margin: -50px auto auto auto;
+  color: #666666;
+}
