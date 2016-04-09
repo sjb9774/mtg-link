@@ -1,0 +1,11 @@
+{% extends 'views/view_base.html' %}
+{% block title %}{{user.username}}{% endblock %}
+{% block body %}
+<div class='container'>
+  {% if is_active_user %}
+  <h1>Welcome back, {{user.first_name}}!</h1>
+  {% else %}
+  <h1>{{user.username}}'s account</h1>
+  {% endif %}
+</div>
+{% endblock %}

@@ -47,8 +47,9 @@ if __name__ == '__main__':
         start = time.time()
         if not args.dry:
             prep_mana_symbols()
-            data = do_data_process(*sets)
-            mysql_dump(data, commit_interval=args.commit_interval)
+            for s in sets:
+                data = do_data_process(s)
+                mysql_dump(data, commit_interval=args.commit_interval)
     except KeyboardInterrupt:
         print 'Rolling back before exit!'
         db.Session.rollback()

@@ -1,0 +1,27 @@
+{% extends 'views/view_base.html' %}
+{% block title %}Login{% endblock %}
+{% block head %}
+<link rel='stylesheet' href='/static/css/views/login.css' type='text/css'>
+<script src='/static/js/view_login.js'></script>
+{% endblock %}
+{% block body %}
+<div class='container'>
+  <h1 id='mtg-link-header'>mtg-link</h1>
+  <div class='login-form-container'>
+    <div class='form-group'>
+      <label for='usernameInput'>Email</label>
+      <input type="email" class="form-control" id="usernameInput" placeholder="email">
+    </div>
+    <div class='form-group'>
+      <label for='passwordInput'>Password</label>
+      <input type='password' class='form-control' id='passwordInput' placeholder='password'>
+    </div>
+    <div class='form-group login-button-wrapper'>
+      <button class='btn btn-default login-button'>Login</button>
+    </div>
+  </div>
+  <div class='sign-up-wrapper'>
+    <a class='sign-up' href='#'>Sign Up</a>
+  </div>
+</div>
+{% endblock %}

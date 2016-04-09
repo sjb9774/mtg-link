@@ -10,4 +10,5 @@ def get_card_suggestions(name):
     for card in potential:
         if not suggestions.get(card.name) or (suggestions.get(card.name) and suggestions.get(card.name).set.release_date < card.set.release_date):
             suggestions[card.name] = card
-    return sorted(suggestions.values(), cmp=lambda x, y: 1 if x.name > y.name else -1)
+    return sorted(suggestions.values(), cmp=lambda x, y: 1 if x.name > y.name else -
+    1)

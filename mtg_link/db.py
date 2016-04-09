@@ -88,8 +88,8 @@ class DefaultMixin():
         return self
 
     @classmethod
-    def get(self, id):
-        return Session.query(self).get(id)
+    def get(self, uuid):
+        return Session.query(self).get(uuid)
 
     @classmethod
     def join(self, other, column=None):

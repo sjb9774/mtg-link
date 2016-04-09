@@ -7,10 +7,6 @@ var search = function(text, callback) {
   $.get({'url': '/search?name=' + text, 'success': onSuccess});
 }
 
-var redirect = function(url) {
-  window.location.href = url;
-}
-
 $(document).on('ready', function onReady(evt) {
   var searchButton = $('#navbar-search-button');
   var searchInput = $('#search-input');

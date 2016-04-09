@@ -1,14 +1,27 @@
 from mtg_link import app
 from flask import render_template, jsonify, request, send_from_directory, abort
+from flask import redirect
 from mtg_link.models.magic import MtgCardModel, MtgCardSetModel
+from mtg_link.models.users import User
+from mtg_link.models.sessions import Session
 from mtg_link.utils.search import get_card_suggestions
+from mtg_link.utils.users import login, get_active_user
 from jinja2 import TemplateNotFound
 import json
 import db
 
 @app.route('/', methods=['GET'])
 def home():
-    return render_template('readme.html')
+    active_user = get_active_user()
+    if not active_user: # no user is logged in
+        return redirect('/login', code=302)
+    else:
+        return render_template('/views/view_home.html')
+
+@app.route('/login', methods=['GET'])
+def login_page():
+    active_user = get_active_user()
+    return render_template('views/view_login.html', active_user=active_user)
 
 @app.route('/api/card', methods=['GET'])
 def api_get_card():
@@ -60,3 +73,34 @@ def image():
 def search():
     args = request.args.to_dict()
     return jsonify({'url': '/view/card?name={}'.format(args.get('name')), 'success': True})
+
+@app.route('/api/login', methods=['POST'])
+def user_login():
+    args = request.form.to_dict()
+    result = {'success': False}
+    if args.get('username') and args.get('password'):
+        session = login(args.get('username'), args.get('password'))
+        if session:
+            result['success'] = True
+            result['session_id'] = session.id
+    return jsonify(result)
+
+@app.route('/api/logout', methods=['POST'])
+def user_logout():
+    args = request.form.to_dict()
+    sess = Session.get(args.get('sessionId', ''))
+    if sess.active:
+        sess.active = False
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False})
+
+
+@app.route('/account/<username>', methods=['GET'])
+def account(username):
+    active_user = get_active_user()
+    if active_user.username == username:
+        is_active_user = True
+    else:
+        is_active_user = False
+    return render_template('views/view_account.html', user=active_user, is_active_user=is_active_user)
