@@ -19,3 +19,11 @@
   text-align: center;
   margin-top: 20px;
 }
+
+.sign-up-form {
+  padding: 15px 45px 15px 45px;
+}
+
+.match-passwords-alert {
+  display: none;
+}

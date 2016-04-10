@@ -26,4 +26,40 @@ $(document).on('ready', function onReady(evt) {
   loginButton.on('click', function(evt) {
     login();
   });
+
+  var signUpPasswordInputs = $('#sign-up-password, #sign-up-password-confirm');
+  signUpPasswordInputs.on('blur', function(evt) {
+    if ($('#sign-up-password').val() !== $('#sign-up-password-confirm').val()) {
+      $('.match-passwords-alert').show();
+    } else {
+      $('.match-passwords-alert').hide();
+    }
+  });
+
+  var signUpSubmitButton = $('#sign-up-submit-button');
+  signUpSubmitButton.on('click', function(evt) {
+    var callback = function(resp) {
+      if (resp.success) {
+        redirect('/login');
+      } else {
+        alert("There was a problem signing up, please try again.");
+      }
+
+    };
+
+    var username = $('#sign-up-username').val();
+    var password = $('#sign-up-password').val();
+    var confirmPassword = $('#sign-up-password-confirm').val();
+
+    if (password === confirmPassword) {
+      var payload = {
+          'url': '/api/register',
+          'data': {'username': username, 'password': password},
+          'success': callback
+      };
+      $.post(payload);
+    } else {
+      alert("Your passwords still don't match!");
+    }
+  });
 });

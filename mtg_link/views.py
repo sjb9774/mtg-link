@@ -5,7 +5,7 @@ from mtg_link.models.magic import MtgCardModel, MtgCardSetModel
 from mtg_link.models.users import User
 from mtg_link.models.sessions import Session
 from mtg_link.utils.search import get_card_suggestions
-from mtg_link.utils.users import login, get_active_user
+from mtg_link.utils.users import login, get_active_user, hash_password, create_user
 from jinja2 import TemplateNotFound
 import json
 import db
@@ -16,7 +16,7 @@ def home():
     if not active_user: # no user is logged in
         return redirect('/login', code=302)
     else:
-        return render_template('/views/view_home.html')
+        return render_template('/views/view_home.html', active_user=active_user)
 
 @app.route('/login', methods=['GET'])
 def login_page():
@@ -47,7 +47,7 @@ def view_card():
 
     card = q.first()
     if card:
-        return render_template("views/view_card.html", card=card)
+        return render_template("views/view_card.html", card=card, active_user=get_active_user())
     else:
         return fourfour_wrapper(args.get('name'))
 
@@ -56,11 +56,12 @@ def four_o_four(err):
     return render_template('views/404.html', suggestions=None), 404
 
 def fourfour_wrapper(card_name):
+    active_user = get_active_user()
     suggestions = get_card_suggestions(card_name)
     if len(suggestions) == 1:
-        return render_template("views/view_card.html", card=suggestions[0])
+        return render_template("views/view_card.html", card=suggestions[0], active_user=active_user)
     else:
-        return render_template('views/404.html', suggestions=suggestions), 404
+        return render_template('views/404.html', suggestions=suggestions, active_user=active_user), 404
 
 @app.route('/image', methods=['GET'])
 def image():
@@ -89,18 +90,23 @@ def user_login():
 def user_logout():
     args = request.form.to_dict()
     sess = Session.get(args.get('sessionId', ''))
-    if sess.active:
+    if sess and sess.active:
         sess.active = False
         return jsonify({'success': True})
     else:
         return jsonify({'success': False})
 
+@app.route('/api/register', methods=['POST'])
+def user_register():
+    args = request.form.to_dict()
+    user = create_user(args.get('username'), args.get('password'))
+    user.insert()
+    db.Session.commit()
+    return jsonify({'success': True})
+
 
 @app.route('/account/<username>', methods=['GET'])
 def account(username):
     active_user = get_active_user()
-    if active_user.username == username:
-        is_active_user = True
-    else:
-        is_active_user = False
-    return render_template('views/view_account.html', user=active_user, is_active_user=is_active_user)
+    user = User.filter_by(username=username).first()
+    return render_template('views/view_account.html', user=user, active_user=active_user)

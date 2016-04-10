@@ -1,6 +1,14 @@
 {% extends 'views/view_base.html' %}
+{% block head %}
+<link rel='stylesheet' href='../static/css/views/home.css' type='text/css'>
+{% block subhead %}
+{% endblock %}
+{% endblock %}
 {% block body %}
 <div class="container">
-  <h1>Welcome to mtg-link</h1>
+  <h1 class='mtg-link-header'>mtg<span class='link-tail'>link</span></h1>
+  <img class='home-logo' src='../static/logo.png'>
+  {% block login %}
+  {% endblock %}
 </div>
 {% endblock %}

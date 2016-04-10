@@ -40,3 +40,14 @@ def get_active_user():
             return None
     else:
         return None
+
+def hash_password(password):
+    return sha256_crypt.encrypt(password);
+
+def create_user(username, password, first_name=None, last_name=None):
+    u = User()
+    u.username = username
+    u.password = hash_password(password)
+    u.first_name = first_name
+    u.last_name = last_name
+    return u

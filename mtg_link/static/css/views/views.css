@@ -1,12 +1,13 @@
 html {
-  height: 100%;
-  overflow: hidden;
+
 }
 
 body {
   background-color: #FFFFFF;
   width: 100%;
   height: 100%;
+  font-family: 'Quicksand', sans-serif;
+  padding-bottom: 75px;
 }
 
 p {
@@ -43,6 +44,10 @@ hr {
 .card-view-bottom-section {
   text-align: center;
   height: 100%;
+}
+
+.card-view-name-wrapper {
+  padding: 0px 100px;
 }
 
 .card-info-wrapper {

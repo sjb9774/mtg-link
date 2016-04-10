@@ -13,10 +13,9 @@
     {% if suggestions %}
     <h3>Maybe you meant?</h3>
     <div class='error-suggestions'>
-        {% for card in suggestions %}
-          <a class='suggestion' href='/view/card?name={{card.name}}'>{{card.name}}</a><br/>
-        {% endfor %}
-      {% else %}
+      {% for card in suggestions %}
+        <a class='suggestion' href='/view/card?name={{card.name}}'>{{card.name}}</a><br/>
+      {% endfor %}
     </div>
     {% endif %}
   </div>

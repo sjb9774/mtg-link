@@ -1,12 +1,10 @@
-{% extends 'views/view_base.html' %}
+{% extends 'views/view_home.html' %}
 {% block title %}Login{% endblock %}
-{% block head %}
+{% block subhead %}
 <link rel='stylesheet' href='/static/css/views/login.css' type='text/css'>
 <script src='/static/js/view_login.js'></script>
 {% endblock %}
-{% block body %}
-<div class='container'>
-  <h1 id='mtg-link-header'>mtg-link</h1>
+{% block login %}
   <div class='login-form-container'>
     <div class='form-group'>
       <label for='usernameInput'>Email</label>
@@ -21,7 +19,40 @@
     </div>
   </div>
   <div class='sign-up-wrapper'>
-    <a class='sign-up' href='#'>Sign Up</a>
+    <a class='sign-up' href='#' data-toggle='modal' data-target='#myModal'>Sign Up</a>
+  </div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Sign up</h4>
+      </div>
+      <div class="modal-body">
+        <div class='sign-up-form form-horizontal'>
+          <div class='form-group'>
+            <label for='sign-up-username'>Email</label>
+            <input class='form-control' type='email' id='sign-up-username' placeholder='email'>
+          </div>
+          <div class='form-group'>
+            <label for='sign-up-password'>Password</label>
+            <input class='form-control' type='password' id='sign-up-password' placeholder='password'>
+          </div>
+          <div class='form-group'>
+            <label for='sign-up-password-confirm'>Confirm password</label>
+            <input class='form-control' type='password' id='sign-up-password-confirm' placeholder='confirm password'>
+          </div>
+          <div class='match-passwords-alert alert alert-warning'>Your passwords don't match</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="sign-up-submit-button" type="button" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

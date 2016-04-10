@@ -1,0 +1,16 @@
+.mtg-link-header {
+  font-size: 172pt;
+  color: #000000;
+  display: inline-block;
+}
+
+.link-tail {
+  color: rgb(185, 225, 239);
+}
+
+.home-logo {
+  width: 10%;
+  display: inline-block;
+  position: relative;
+  bottom: 70px;
+}

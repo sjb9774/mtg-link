@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <link rel='stylesheet' href='../static/css/libs/bootstrap.css' type='text/css'>
     <link rel='stylesheet' href='../static/css/views/views.css' type='text/css'>
-    <script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+    <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet' type='text/css'>
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
     <script src='../static/js/libs/bootstrap.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.0/js.cookie.js'></script>
     <script src='../static/js/shared.js'></script>
@@ -16,12 +17,21 @@
   <body>
     <nav class='navbar navbar-default'>
       <div class='container-fluid'>
-        <a href='/' class='navbar-brand'>mtglink</a>
-        <div class='navbar-form navbar-right'>
-          <div class='form-group'>
-            <input type='text' id='search-input' class='form-control' placeholder='Search'>
+        <div class='navbar-header'>
+          <a href='/' class='navbar-brand'>mtglink</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          {% if active_user %}
+          <ul class='nav navbar-nav'>
+            <li><a href='/account/{{active_user.username}}'>My Account</a></li>
+          </ul>
+          {% endif %}
+          <div class='navbar-form navbar-right'>
+            <div class='form-group'>
+              <input type='text' id='search-input' class='form-control' placeholder='Search'>
+            </div>
+              <button id='navbar-search-button' type='submit' class='btn btn-default'>Go</button>
           </div>
-            <button id='navbar-search-button' type='submit' class='btn btn-default'>Go</button>
         </div>
       </div>
     </nav>
@@ -30,7 +40,9 @@
       <nav class='footer navbar navbar-default'>
         <div class='container-fluid'>
           <div class='navbar-form navbar-right'>
+            {% if active_user %}
             <button id='logout-button' class='btn btn-default'>Logout</button>
+            {% endif %}
           </div>
         </div>
       </nav>
