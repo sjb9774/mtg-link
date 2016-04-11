@@ -14,6 +14,7 @@ class Deck(db.IdMixin, db.Base, db.DefaultMixin):
     create_date = Column(Date())
     deck_index = Column(Integer, default=0)
     root_deck_id = Column(VARCHAR(db.id_length))
+    sanitized_name = Column(VARCHAR(200))
 
 class XDeckCard(db.IdMixin, db.Base, db.DefaultMixin):
 

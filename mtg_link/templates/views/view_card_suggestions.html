@@ -1,0 +1,19 @@
+{% extends 'views/view_base.html' %}
+{% block head %}
+<link rel='stylesheet' href='/static/css/views/view_card_suggestions.css' type='text/css'>
+{% endblock %}
+{% block body %}
+<div class='container'>
+  <div class='error-suggestions-wrapper'>
+    <h1 class='page-header'>Card not found</h1>
+    {% if suggestions %}
+    <h3>Maybe you meant?</h3>
+    <div class='error-suggestions'>
+      {% for card in suggestions %}
+        <a class='suggestion' href='/view/card?name={{card.name}}'>{{card.name}}</a><br/>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

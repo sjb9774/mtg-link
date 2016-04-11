@@ -1,0 +1,30 @@
+{% extends 'views/view_base.html' %}
+{% block title %}New Deck{% endblock %}
+{% block head %}
+<link rel='stylesheet' href='../static/css/views/new_deck.css' type='text/css'>
+<script src='../static/js/view_new_deck.js'></script>
+{% endblock %}
+{% block body %}
+<div class='container'>
+  <div class='row'>
+    <div class='page-header'>
+      <h1>New Deck<small> Enter your decklist</small></h1>
+    </div>
+  </div>
+  <div class='row'>
+    <div class='new-deck-group input-group'>
+      <textarea class='new-deck-textarea'></textarea>
+      <button class='btn btn-primary' id='new-deck-submit-button'>Submit</button>
+    </div>
+    <div class='well quick-view-wrapper'>
+      <div class='quick-view-header'>
+        <span>Quick View</span>
+        <input id='quick-view-input' type='text'></input>
+      </div>
+      <div class='quick-view-image-wrapper'>
+        <img id='quick-view-image'>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

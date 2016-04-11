@@ -6,26 +6,25 @@ from mtg_link.models.users import User
 from mtg_link.models.sessions import Session
 from mtg_link.utils.search import get_card_suggestions
 from mtg_link.utils.users import login, get_active_user, hash_password, create_user
+from mtg_link.utils.decks import create_deck
+from mtg_link.utils.views import custom_route, custom_render
 from jinja2 import TemplateNotFound
 import json
 import db
 
-@app.route('/', methods=['GET'])
-def home():
-    active_user = get_active_user()
-    if not active_user: # no user is logged in
+@custom_route('/', methods=['GET'])
+def home(get_args):
+    if not get_active_user():
         return redirect('/login', code=302)
     else:
-        return render_template('/views/view_home.html', active_user=active_user)
+        return custom_render('/views/view_home.html')
 
-@app.route('/login', methods=['GET'])
-def login_page():
-    active_user = get_active_user()
-    return render_template('views/view_login.html', active_user=active_user)
+@custom_route('/login', methods=['GET'])
+def login_page(get_args):
+    return custom_render('views/view_login.html')
 
-@app.route('/api/card', methods=['GET'])
-def api_get_card():
-    args = request.args.to_dict()
+@custom_route('/api/card', methods=['GET'])
+def api_get_card(get_args):
     if not args:
         # TODO: Return a nice page detailing how to use the api
         return 'Needs some arguments!'
@@ -34,8 +33,8 @@ def api_get_card():
         cards = MtgCardModel.filter_by(**filtered_args).all()
         return jsonify({'cards':[dict(card) for card in cards]})
 
-@app.route('/view/card', methods=['GET'])
-def view_card():
+@custom_route('/view/card', methods=['GET'])
+def view_card(get_args):
     args = request.args.to_dict()
     q = db.Session.query(MtgCardModel).join(MtgCardSetModel)\
                                       .filter(MtgCardModel.name == args.get('name'))\
@@ -47,66 +46,92 @@ def view_card():
 
     card = q.first()
     if card:
-        return render_template("views/view_card.html", card=card, active_user=get_active_user())
+        return custom_render("views/view_card.html", card=card)
     else:
-        return fourfour_wrapper(args.get('name'))
+        return custom_render("views/view_card_suggestions.html", suggestions=get_card_suggestions(args.get('name')))
 
 @app.errorhandler(404)
 def four_o_four(err):
-    return render_template('views/404.html', suggestions=None), 404
+    return custom_render('views/404.html'), 404
 
-def fourfour_wrapper(card_name):
-    active_user = get_active_user()
-    suggestions = get_card_suggestions(card_name)
-    if len(suggestions) == 1:
-        return render_template("views/view_card.html", card=suggestions[0], active_user=active_user)
-    else:
-        return render_template('views/404.html', suggestions=suggestions, active_user=active_user), 404
-
-@app.route('/image', methods=['GET'])
-def image():
-    args = request.args.to_dict()
-    q = db.Session.query(MtgCardModel).join(MtgCardSetModel).filter(MtgCardSetModel.code==args.get('set')) if args.get('set') else MtgCardModel
-    card = q.filter(MtgCardModel.name == args.get('name')).first()
+@custom_route('/image', methods=['GET'])
+def image(get_args):
+    set_code = get_args.get('set')
+    name = get_args.get('name')
+    q = db.Session.query(MtgCardModel).join(MtgCardSetModel).filter(MtgCardSetModel.code==set_code) if set_code else MtgCardModel
+    card = q.filter(MtgCardModel.name == name).filter(MtgCardModel.multiverse_id != None).first()
     return send_from_directory('/home/myaccount/Pictures', '{card.set.code}/{card.name} - {card.multiverse_id}.png'.format(card=card))
 
-@app.route('/search', methods=['GET'])
-def search():
-    args = request.args.to_dict()
-    return jsonify({'url': '/view/card?name={}'.format(args.get('name')), 'success': True})
+@custom_route('/search', methods=['GET'])
+def search(get_args):
+    name = get_args.get('name')
+    card = MtgCardModel.filter_by(name=name).first()
+    result = {
+        'success': False
+    }
+    if card:
+        result['success'] = True
+        result['url'] = '/view/card?name={name}'.format(name=card.name)
+        result['imageUrl'] = '/image?name={name}'.format(name=card.name)
+    else:
+        result['success'] = False
+        result['url'] = '/view/card?name={name}'.format(name=name)
 
-@app.route('/api/login', methods=['POST'])
-def user_login():
-    args = request.form.to_dict()
+    return jsonify(result)
+
+@custom_route('/api/login', methods=['POST'])
+def user_login(post_args):
     result = {'success': False}
-    if args.get('username') and args.get('password'):
-        session = login(args.get('username'), args.get('password'))
+    if post_args.get('username') and post_args.get('password'):
+        session = login(post_args.get('username'), post_args.get('password'))
         if session:
             result['success'] = True
             result['session_id'] = session.id
     return jsonify(result)
 
-@app.route('/api/logout', methods=['POST'])
-def user_logout():
-    args = request.form.to_dict()
-    sess = Session.get(args.get('sessionId', ''))
+@custom_route('/api/logout', methods=['POST'])
+def user_logout(post_args):
+    sess = Session.get(post_args.get('sessionId', ''))
     if sess and sess.active:
         sess.active = False
         return jsonify({'success': True})
     else:
         return jsonify({'success': False})
 
-@app.route('/api/register', methods=['POST'])
-def user_register():
-    args = request.form.to_dict()
-    user = create_user(args.get('username'), args.get('password'))
+@custom_route('/api/register', methods=['POST'])
+def user_register(post_args):
+    user = create_user(post_args.get('username'), post_args.get('password'))
     user.insert()
     db.Session.commit()
     return jsonify({'success': True})
 
-
-@app.route('/account/<username>', methods=['GET'])
-def account(username):
+@custom_route('/api/new-deck', methods=['POST'])
+def save_new_deck(post_args):
+    deck_text = post_args.get('text').split('\n')
     active_user = get_active_user()
+    deck, xcards = create_deck(deck_text)
+    deck.user_id = active_user.id
+    deck.name = "New Deck - {username} ({date})".format(username=active_user.username, date=deck.create_date.strftime('%m/%d/%Y'))
+    deck.insert()
+    for xcard in xcards:
+        xcard.insert()
+    db.Session.commit()
+
+    return jsonify({'success': True, 'deckName': deck.name})
+
+@custom_route('/account/<username>', methods=['GET'])
+def account(username, get_args):
     user = User.filter_by(username=username).first()
-    return render_template('views/view_account.html', user=user, active_user=active_user)
+    return custom_render('views/view_account.html', user=user)
+
+@custom_route('/view/new-deck', methods=['GET'])
+def new_deck(get_args):
+    return custom_render('views/view_new_deck.html')
+
+@custom_route('/view/decks/<username>', methods=['GET'])
+def view_users_decks(username, get_args):
+    user = User.filter_by(username=username).first()
+    if user:
+        return render_template('views/view_decks.html', user=user)
+    else:
+        abort(404)

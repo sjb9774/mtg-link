@@ -1,0 +1,16 @@
+.new-deck-button {
+  float: right;
+}
+
+.deck-list-wrapper {
+  width: 60%;
+}
+
+.row .deck-list-wrapper {
+  margin: auto;
+  width: 60%;
+}
+
+.new-deck-row {
+  margin-bottom: 25px;
+}

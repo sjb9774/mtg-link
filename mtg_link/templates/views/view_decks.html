@@ -1,0 +1,35 @@
+{% extends 'views/view_base.html' %}
+{% block title %}{{user.username}}'s Decks{% endblock %}
+{% block head %}
+<script src='/static/js/view_decks.js'></script>
+<link href='/static/css/views/decks.css' type='text/css' rel='stylesheet'>
+{% endblock %}
+{% block body %}
+<div class='container'>
+  <div class='new-deck-row row'>
+    <a href='/view/new-deck' class='new-deck-button btn btn-primary'>New Deck</a>
+  </div>
+  <div class='row'>
+  {% if user.decks %}
+    <div class='deck-list-wrapper table-responsive table-bordered'>
+        <table class='table table-striped table-hover'>
+          <thead>
+            <th>#</th>
+            <th>Name</th>
+            <th>Create Date</th>
+          </thead>
+            {% for deck in user.decks %}
+              <tr class='link-row' data-href='/view/decks/{{user.username}}/{{deck.name}}'>
+                <th>{{loop.index}}</th>
+                <td>{{deck.name}}</td>
+                <td>{{deck.create_date}}</td>
+              </tr>
+            {% endfor %}
+        </table>
+      </div>
+  </div>
+  {% else %}
+  <h1>This user has no decks yet :(</h1>
+  {% endif %}
+</div>
+{% endblock %}
