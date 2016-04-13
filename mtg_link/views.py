@@ -4,6 +4,7 @@ from flask import redirect
 from mtg_link.models.magic import MtgCardModel, MtgCardSetModel
 from mtg_link.models.users import User
 from mtg_link.models.sessions import Session
+from mtg_link.models.decks import Deck
 from mtg_link.utils.search import get_card_suggestions
 from mtg_link.utils.users import login, get_active_user, hash_password, create_user
 from mtg_link.utils.decks import create_deck
@@ -111,7 +112,7 @@ def save_new_deck(post_args):
     active_user = get_active_user()
     deck, xcards = create_deck(deck_text)
     deck.user_id = active_user.id
-    deck.name = "New Deck - {username} ({date})".format(username=active_user.username, date=deck.create_date.strftime('%m/%d/%Y'))
+    deck.name = post_args.get('deckName')
     deck.insert()
     for xcard in xcards:
         xcard.insert()
@@ -132,6 +133,36 @@ def new_deck(get_args):
 def view_users_decks(username, get_args):
     user = User.filter_by(username=username).first()
     if user:
-        return render_template('views/view_decks.html', user=user)
+        return custom_render('views/view_decks.html', user=user)
     else:
         abort(404)
+
+@custom_route('/view/decks/<username>/<deck>', methods=['GET'])
+def view_deck(username, deck, get_args):
+    from collections import OrderedDict
+    user = User.filter_by(username=username).first()
+    deck = Deck.filter_by(user_id=user.id, name=deck).first()
+    deck_dict = OrderedDict()
+
+    priority_list = [
+        'lands',
+        'creatures',
+        'artifacts',
+        'enchantments',
+        'planeswalkers',
+        'instants',
+        'sorceries'
+    ]
+
+    for card_type in priority_list:
+        deck_dict.setdefault(card_type, [])
+        for card, quantity in getattr(deck, card_type):
+            already_added = False
+            for ctype in priority_list[:priority_list.index(card_type)]:
+                if (card, quantity) in deck_dict[ctype]:
+                    already_added = True
+                    break
+            if not already_added:
+                deck_dict[card_type].append((card, quantity))
+
+    return custom_render('/views/view_deck.html', user=user, deck=deck, deck_dict=deck_dict)

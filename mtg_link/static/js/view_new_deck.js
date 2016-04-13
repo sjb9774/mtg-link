@@ -17,6 +17,7 @@ $(document).on('ready', function onReady(evt) {
   var newDeckSubmitButton = $('#new-deck-submit-button');
   newDeckSubmitButton.on('click', function(evt) {
     var deckText = $('.new-deck-textarea').val();
+    var deckName = $('deck-name-input').val();
     var callback = function(resp) {
       if (resp.success) {
         alert('Deck ' + resp.deckName + ' saved successfully!');
@@ -25,7 +26,7 @@ $(document).on('ready', function onReady(evt) {
     var payload = {
       'url': '/api/new-deck',
       'success': callback,
-      'data': {'text': deckText}
+      'data': {'text': deckText, 'deckName': deckName}
     }
     $.post(payload);
   });

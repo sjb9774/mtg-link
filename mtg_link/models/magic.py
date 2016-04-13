@@ -74,6 +74,13 @@ class MtgCardModel( db.IdMixin, db.Base, db.DefaultMixin, MtgCard):
                               .all()
         return sets
 
+    @property
+    def types(self):
+        return db.Session.query(TypeModel.name)\
+                         .join(XCardType)\
+                         .filter(XCardType.card_id==self.id)\
+                         .all()
+
 class MtgCardSetModel(db.Base, db.DefaultMixin, db.IdMixin, MtgCardSet):
 
     __tablename__ = 'sets'
